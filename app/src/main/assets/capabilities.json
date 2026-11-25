@@ -1,0 +1,155 @@
+[
+  {
+    "id": "health.calories",
+    "aliases": ["счетчик калорий", "счётчик калорий", "дневник питания", "калории", "питание"],
+    "targets": [
+      {"package": "com.myfitnesspal.android"},
+      {"package": "ru.yazio.android"},
+      {"package": "com.google.android.apps.fitness"}
+    ]
+  },
+  {
+    "id": "health.workout",
+    "aliases": ["тренировка", "тренировки", "фитнес", "спорт"],
+    "targets": [
+      {"package": "com.google.android.apps.fitness"},
+      {"package": "com.myfitnesspal.android"},
+      {"package": "ru.yazio.android"}
+    ]
+  },
+  {
+    "id": "finance.balance",
+    "aliases": ["баланс", "остаток по карте", "остаток", "мои деньги"],
+    "targets": [
+      {"package": "com.sberbankonline"},
+      {"package": "ru.tinkoff"},
+      {"package": "com.idamob.tinkoff"},
+      {"package": "ru.alfabank"},
+      {"package": "ru.vtb"}
+    ]
+  },
+  {
+    "id": "finance.transfers",
+    "aliases": ["переводы", "перевести деньги", "отправить деньги", "платеж"],
+    "targets": [
+      {"package": "com.sberbankonline"},
+      {"package": "ru.tinkoff"},
+      {"package": "com.idamob.tinkoff"},
+      {"package": "ru.alfabank"},
+      {"package": "ru.vtb"}
+    ]
+  },
+  {
+    "id": "food.order",
+    "aliases": ["заказ еды", "заказать еду", "доставка еды", "еда"],
+    "targets": [
+      {"package": "ru.foodfox"},
+      {"package": "com.deliveryclub"},
+      {"package": "ru.sbermarket"},
+      {"package": "com.glovo"}
+    ]
+  },
+  {
+    "id": "food.repeat_order",
+    "aliases": ["повтор заказа", "повторить заказ", "заказать снова", "как в прошлый раз"],
+    "targets": [
+      {"package": "ru.foodfox"},
+      {"package": "com.deliveryclub"},
+      {"package": "ru.sbermarket"},
+      {"package": "com.glovo"}
+    ]
+  },
+  {
+    "id": "navigation.route",
+    "aliases": ["маршрут", "поехать", "дорога", "навигатор", "навигация"],
+    "targets": [
+      {"package": "com.google.android.apps.maps"},
+      {"package": "ru.yandex.maps"},
+      {"package": "ru.yandex.navigator"}
+    ]
+  },
+  {
+    "id": "transport.taxi",
+    "aliases": ["такси", "вызвать машину", "поездка"],
+    "targets": [
+      {"package": "ru.yandex.taxi"},
+      {"package": "com.uber"},
+      {"package": "ru.citymobil"}
+    ]
+  },
+  {
+    "id": "communication.chat",
+    "aliases": ["чат", "сообщения", "написать сообщение", "мессенджер"],
+    "targets": [
+      {"package": "org.telegram.messenger"},
+      {"package": "ru.oneme.app"},
+      {"package": "com.whatsapp"},
+      {"package": "com.vkontakte.android"}
+    ]
+  },
+  {
+    "id": "documents.scan",
+    "aliases": ["скан документа", "сканировать документ", "сканер", "сделать скан"],
+    "targets": [
+      {"package": "com.google.android.apps.docs"},
+      {"package": "com.microsoft.office.officelens"},
+      {"package": "com.adobe.scan.android"}
+    ]
+  },
+  {
+    "id": "shopping.repeat",
+    "aliases": ["повтор покупки", "повторить покупку", "купить снова", "заказать опять"],
+    "targets": [
+      {"package": "ru.sbermarket"},
+      {"package": "ru.ozon"},
+      {"package": "ru.wildberries"},
+      {"package": "ru.lamoda"}
+    ]
+  },
+  {
+    "id": "news.read",
+    "aliases": ["новости", "читать новости", "лента новостей"],
+    "targets": [
+      {"package": "org.telegram.messenger"},
+      {"package": "ru.oneme.app"},
+      {"package": "com.google.android.apps.news"},
+      {"package": "com.yandex.searchapp"}
+    ]
+  },
+  {
+    "id": "photos.gallery",
+    "aliases": ["галерея", "фотографии", "мои фото", "фото"],
+    "targets": [
+      {"package": "com.google.android.apps.photos"},
+      {"package": "com.google.android.gallery3d"},
+      {"package": "com.sec.android.gallery3d"}
+    ]
+  },
+  {
+    "id": "music.play",
+    "aliases": ["музыка", "песни", "включить музыку", "плеер"],
+    "targets": [
+      {"package": "ru.yandex.music"},
+      {"package": "com.spotify.music"},
+      {"package": "com.google.android.apps.youtube.music"}
+    ]
+  },
+  {
+    "id": "weather.forecast",
+    "aliases": ["погода", "прогноз погоды", "дождь", "температура"],
+    "targets": [
+      {"package": "ru.yandex.weather"},
+      {"package": "com.google.android.apps.weather"},
+      {"package": "com.accuweather.android"}
+    ]
+  },
+  {
+    "id": "mail.inbox",
+    "aliases": ["почта", "входящие", "письма", "открыть почту"],
+    "targets": [
+      {"package": "com.google.android.gm"},
+      {"package": "ru.yandex.mail"},
+      {"package": "com.microsoft.office.outlook"}
+    ]
+  }
+]

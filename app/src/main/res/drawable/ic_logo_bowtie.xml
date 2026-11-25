@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Белая бабочка Walter — аватар агента в чате -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <group android:scaleX="0.043" android:scaleY="0.043" android:translateX="1.0" android:translateY="1.0">
+        <path android:pathData="M256,256 L112,150 Q112,256 112,362 Z" android:fillColor="#FFFFFF"/>
+        <path android:pathData="M256,256 L400,150 Q400,256 400,362 Z" android:fillColor="#FFFFFF"/>
+    </group>
+</vector>

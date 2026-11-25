@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Открытие файлов из «Всего хранилища» через FileProvider -->
+    <external-path name="external" path="." />
+    <!-- Резервная копия файла, если оригинал вне корней провайдера -->
+    <cache-path name="cache" path="." />
+</paths>

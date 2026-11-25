@@ -1,0 +1,24 @@
+# Сборка и кэши
+build/
+app/build/
+.gradle/
+.kotlin/
+captures/
+*.log
+build*.log
+
+# Локальные пути и секреты (не публикуются)
+local.properties
+keystore.properties
+keystore/
+*.keystore
+*.jks
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Артефакты сборок
+*.apk
+*.aab
