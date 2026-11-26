@@ -362,11 +362,32 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         walterForeground = true
         eventDrainTick.value++
+        DebugLog.log("home-nav", "onResume")
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        // Не перерисовываем чат во время системной анимации Home/Recents.
+        walterForeground = false
+        DebugLog.log("home-nav", "onUserLeaveHint")
     }
 
     override fun onPause() {
         super.onPause()
         walterForeground = false
+        DebugLog.log("home-nav", "onPause")
+    }
+
+    override fun onStop() {
+        super.onStop()
+        DebugLog.log("home-nav", "onStop")
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        // Recents может открыться без onPause: ориентируемся на фактический оконный фокус.
+        walterForeground = hasFocus
+        DebugLog.log("home-nav", "windowFocus=$hasFocus")
     }
 
 
@@ -436,7 +457,7 @@ class MainActivity : ComponentActivity() {
             val ime = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
             val nav = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
             val applied = (ime - nav).coerceAtLeast(0)
-            if (imeInsetBottomPx.value != applied) {
+            if (walterForeground && imeInsetBottomPx.value != applied) {
                 imeInsetBottomPx.value = applied
                 DebugLog.log("ime-diag", "ime=${ime}px nav=${nav}px applied=${applied}px")
             }
