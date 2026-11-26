@@ -4941,7 +4941,7 @@ private fun EventBlock(
         Row(verticalAlignment = Alignment.CenterVertically) {
             val (tagBg, tagFg) = when (event.kind) {
                 "sms" -> Color(0xFFE3F2E5) to Color(0xFF2F7A4D)
-                "push" -> Color(0xFFE3ECFB) to Color(0xFF3B5F9E)
+                "push" -> Color(0xFFFCE9DE) to Color(0xFF8C4E2D)
                 "mail" -> Color(0xFFF1E9FB) to Color(0xFF6B4FA3)
                 "calendar" -> Color(0xFFFBF0DC) to Color(0xFF8A6A1F)
                 "watch" -> Color(0xFFF1F3F5) to Color(0xFF4B5159)
