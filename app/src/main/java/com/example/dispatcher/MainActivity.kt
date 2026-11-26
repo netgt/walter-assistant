@@ -363,6 +363,12 @@ class MainActivity : ComponentActivity() {
         private set
 
     private val nlsHandler = Handler(Looper.getMainLooper())
+    private val nlsWatchdog = object : Runnable {
+        override fun run() {
+            requestNlsRebind("watchdog")
+            nlsHandler.postDelayed(this, 5000)
+        }
+    }
 
     private fun requestNlsRebind(reason: String) {
         if (Build.VERSION.SDK_INT < 24) return
@@ -381,12 +387,20 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         walterForeground = true
         eventDrainTick.value++
+        runCatching {
+            startService(Intent(this, WatchService::class.java))
+        }.onFailure {
+            DebugLog.log("watch-service", "startService: ${it.message ?: it.javaClass.simpleName}")
+        }
         requestNlsRebind("onResume")
+        nlsHandler.removeCallbacks(nlsWatchdog)
+        nlsHandler.postDelayed(nlsWatchdog, 5000)
     }
 
     override fun onPause() {
         super.onPause()
         walterForeground = false
+        nlsHandler.removeCallbacks(nlsWatchdog)
     }
 
 

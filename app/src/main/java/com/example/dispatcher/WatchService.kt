@@ -64,6 +64,13 @@ class WatchService : NotificationListenerService() {
         }, 700)
     }
 
+    /** Явный запуск из MainActivity: держим сервис живым и просим систему связать NLS. */
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        DebugLog.log("watch-service", "onStartCommand")
+        requestRebind("startCommand")
+        return START_STICKY
+    }
+
     /** Система разорвала связь NLS: не ждём следующего запуска активности. */
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
