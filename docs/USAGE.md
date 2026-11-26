@@ -92,19 +92,8 @@ Walter сам выберет инструмент, получит данные �
 
 Матрица реальных intent-filters на IQOO: [APP-ACTIONS.md](APP-ACTIONS.md).
 
-## 10. Gmail OAuth
+## 10. Почта и сознательный отказ от Gmail OAuth/Pub/Sub
 
-В **Настройки → Gmail** укажите OAuth Client ID типа **Android** и нажмите «Подключить Gmail». Используется AppAuth и scope `gmail.readonly`.
+Для чтения почты используется **IMAP + пароль приложения**, для событий Gmail — обычные системные уведомления через NotificationListenerService.
 
-`read_mail` теперь читает и Gmail OAuth, и IMAP-аккаунты. Refresh token и access token остаются локально в `SharedPreferences` устройства и не попадают в репозиторий или bridge.
-
-## 11. Gmail push
-
-Для настоящего Gmail push нужна связка **Gmail `users.watch` + Google Pub/Sub + Cloud Run bridge**.
-
-- `gmail_push(query="watch")` — регистрация watch и сохранение `historyId`.
-- `gmail_push` — проверка новых писем через bridge и `users.history`.
-- В настройках Gmail push укажите полное имя topic, bridge URL и секрет.
-- Код и инструкция по развёртыванию: [gmail-push-bridge/README.md](../gmail-push-bridge/README.md).
-
-Bridge получает только `emailAddress` и `historyId`, не письма и не OAuth refresh token. Без Pub/Sub и bridge инструмент возвращает инструкцию по настройке, а не имитирует push.
+Мы сознательно отказались от Gmail OAuth и Gmail `users.watch` через Pub/Sub и Cloud Run: такая настройка слишком сложна для целевой аудитории. Пользователю не нужны Google Cloud, OAuth Client ID или собственный bridge.

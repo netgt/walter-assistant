@@ -33,10 +33,9 @@ android {
         applicationId = "com.example.dispatcher"
         minSdk = 26
         targetSdk = 35
-        versionCode = 265
-        versionName = "1.48.0"
+        versionCode = 266
+        versionName = "1.48.1"
         multiDexEnabled = true
-        manifestPlaceholders["appAuthRedirectScheme"] = "com.example.dispatcher"
     }
 
     buildTypes {
@@ -102,8 +101,6 @@ dependencies {
     // почта по IMAP (Яндекс/Gmail)
     implementation("com.sun.mail:android-mail:1.6.7")
     implementation("com.sun.mail:android-activation:1.6.7")
-    // Gmail OAuth через системный браузер и custom-scheme redirect
-    implementation("net.openid:appauth:0.11.1")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20240303")
 }

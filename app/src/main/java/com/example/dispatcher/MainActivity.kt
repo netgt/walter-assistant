@@ -185,8 +185,7 @@ private val READ_TOOLS = listOf(
     ToolDesc("alert_enable", "Включаю оповещение…", "включить/выключить оповещение Walter (id/имя в query)"),
     ToolDesc("web_search", "Ищу в интернете…", "веб-поиск сразу в двух движках (Яндекс + DuckDuckGo): объединённые заголовки, ссылки и сниппеты по запросу в query"),
     ToolDesc("read_calendar", "Читаю календарь…", "события календарей: системный календарь устройства + несколько Яндекс-календарей по CalDAV; query — сегодня/завтра/неделя/месяц или YYYY-MM-DD..YYYY-MM-DD"),
-    ToolDesc("read_mail", "Читаю почту…", "письма из всех настроенных источников (Gmail OAuth + IMAP); письма показываются карточками с ветками ответов; query — сколько последних писем с каждого"),
-    ToolDesc("gmail_push", "Проверяю Gmail push…", "Gmail users.watch через OAuth и Pub/Sub bridge: query=\"watch\" — зарегистрировать watch; обычный вызов — новые письма через historyId; требуются Pub/Sub topic, bridge URL и секрет"),
+    ToolDesc("read_mail", "Читаю почту…", "письма из всех настроенных почтовых аккаунтов (IMAP, несколько ящиков); письма показываются карточками с ветками ответов; query — сколько последних писем с каждого"),
     ToolDesc("fetch_url", "Читаю страницу…", "прямой HTTPS GET произвольной HTTP/HTTPS-страницы по полному URL; без специальных обработчиков сервисов"),
     ToolDesc("geocode", "Ищу адрес…", "геокодинг места (Яндекс Геокодер): query — адрес или название места; возвращает координаты и точный адрес"),
     ToolDesc("route_info", "Строю маршрут…", "маршрут между точками (Яндекс Маршрутизация, ПЛАТНЫЙ сервис): from и to — адреса; время и дистанция; бесплатная альтернатива — distance (по прямой)"),
@@ -398,13 +397,6 @@ class MainActivity : ComponentActivity() {
         .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
         .build()
     private var appIndex: String = ""
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == GmailOAuth.RC_AUTH) {
-            GmailOAuth.handleResult(this, data)
-        }
-    }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
@@ -759,7 +751,6 @@ class MainActivity : ComponentActivity() {
                         // 2) Периодическая проверка по инструментам оповещения.
                         val tools = s.tools
                         val data = when {
-                            tools.contains("gmail_push") -> "GMAIL PUSH:\n" + gmailPushData("check") { }
                             tools.contains("read_mail") -> "ПОЧТА:\n" + readMailData("5") { }
                             tools.contains("fetch_url") -> "TELEGRAM-КАНАЛЫ:\n" + readTelegramChannelsData("")
                             tools.contains("read_calendar") -> "КАЛЕНДАРЬ:\n" + readCalendarData("неделя") { }
@@ -2576,8 +2567,7 @@ class MainActivity : ComponentActivity() {
 - форматы для write_file: xlsx — ячейки строки через « | », новый лист начинается строкой "## Имя листа"; pptx — новый слайд начинается строкой "## Слайд N" (далее строки текста слайда); text/docx — обычный текст строками
 - grep_files: поиск текста внутри текстовых файлов (искомый текст — в "query"; папку или конкретный файл можно указать в "path")
 - read_calendar: события календарей — системный календарь устройства + все настроенные Яндекс-календари по CalDAV ("query" — сегодня/завтра/неделя/месяц или YYYY-MM-DD..YYYY-MM-DD)
-- read_mail: письма из всех настроенных источников (Gmail OAuth + IMAP; "query" — сколько последних писем с каждого, по умолчанию 10)
-- gmail_push: проверка новых писем через Gmail users.watch + Pub/Sub bridge; "query" — "watch" для регистрации watch, иначе обычная проверка historyId; требует настроенные Gmail OAuth, Pub/Sub topic, bridge URL и секрет
+- read_mail: письма из всех настроенных почтовых аккаунтов по IMAP ("query" — сколько последних писем с каждого, по умолчанию 10)
 - fetch_url: прямой HTTPS GET произвольной HTTP/HTTPS-страницы по полному URL в "query"; никаких специальных обработчиков сервисов
 - geocode: координаты и точный адрес места ("query" — адрес; Яндекс Геокодер)
 - reverse_geocode: адрес по координатам ("query" — широта,долгота)
@@ -2666,8 +2656,7 @@ $mem
 - форматы для write_file: xlsx — ячейки строки через « | », новый лист начинается строкой "## Имя листа"; pptx — новый слайд начинается строкой "## Слайд N" (далее строки текста слайда); text/docx — обычный текст строками
 - grep_files: поиск текста внутри текстовых файлов (искомый текст — в "query"; папку или конкретный файл можно указать в "path")
 - read_calendar: события календарей — системный календарь устройства + все настроенные Яндекс-календари по CalDAV ("query" — сегодня/завтра/неделя/месяц или YYYY-MM-DD..YYYY-MM-DD)
-- read_mail: письма из всех настроенных источников (Gmail OAuth + IMAP; "query" — сколько последних писем с каждого, по умолчанию 10)
-- gmail_push: проверка новых писем через Gmail users.watch + Pub/Sub bridge; "query" — "watch" для регистрации watch, иначе обычная проверка historyId; требует настроенные Gmail OAuth, Pub/Sub topic, bridge URL и секрет
+- read_mail: письма из всех настроенных почтовых аккаунтов по IMAP ("query" — сколько последних писем с каждого, по умолчанию 10)
 - fetch_url: прямой HTTPS GET произвольной HTTP/HTTPS-страницы по полному URL в "query"; никаких специальных обработчиков сервисов
 - geocode: координаты и точный адрес места ("query" — адрес; Яндекс Геокодер)
 - reverse_geocode: адрес по координатам ("query" — широта,долгота)
@@ -3601,30 +3590,13 @@ $mem
     private suspend fun readMailData(q: String, onEvents: (List<EventInfo>) -> Unit): String {
         val prefs = getSharedPreferences(Prefs.NAME, MODE_PRIVATE)
         val accounts = MailAccounts.fromJson(prefs.getString(Prefs.KEY_MAIL_ACCOUNTS, null))
-        val gmailConnected = GmailOAuth.isConnected(prefs)
-        if (accounts.isEmpty() && !gmailConnected) {
-            return "Почта не настроена: подключи Gmail OAuth или выполни «настрой почту» (IMAP-аккаунт с паролем приложения)."
-        }
+        if (accounts.isEmpty()) return "Почта не настроена: скажи пользователю выполнить команду «настрой почту» (IMAP-аккаунт с паролем приложения)."
         val count = q.trim().toIntOrNull()?.coerceIn(1, 20) ?: 10
-        val sources = accounts.size + if (gmailConnected) 1 else 0
-        val per = maxOf(1, count / sources)
+        val per = maxOf(1, count / accounts.size)
         return withContext(Dispatchers.IO) {
             // карточки писем в чате: как пуши и SMS — с веткой ответа, без внешнего приложения
             val cardEvents = mutableListOf<EventInfo>()
-            val parts = mutableListOf<String>()
-            if (gmailConnected) {
-                runCatching { GmailApi.fetchMessages(prefs, per) }.fold(
-                    onSuccess = { items ->
-                        cardEvents += items.map { m -> EventInfo("mail", m.from, m.subject, m.body.take(400), m.at) }
-                        val account = GmailOAuth.email(prefs).ifBlank { "Gmail" }
-                        parts += "### $account (Gmail OAuth)\n" + MailStore.formatItems(items)
-                    },
-                    onFailure = { e ->
-                        parts += "### Gmail OAuth: ОШИБКА — ${e.message ?: e.javaClass.simpleName}"
-                    }
-                )
-            }
-            parts += accounts.map { acc ->
+            val parts = accounts.map { acc ->
                 val res = runCatching { MailStore.fetch(acc.host, acc.port, acc.user, acc.pass, acc.ssl, per) }
                 res.fold(
                     onSuccess = { items ->
@@ -3637,20 +3609,9 @@ $mem
                 )
             }
             onEvents(cardEvents.sortedBy { it.at })
-            "Почта (источников: $sources, писем карточками: ${cardEvents.size}):\n\n" + parts.joinToString("\n\n")
+            "Почта (аккаунтов: ${accounts.size}, писем карточками: ${cardEvents.size}):\n\n" + parts.joinToString("\n\n")
         }
     }
-
-    private suspend fun gmailPushData(query: String, onEvents: (List<EventInfo>) -> Unit): String =
-        withContext(Dispatchers.IO) {
-            val prefs = getSharedPreferences(Prefs.NAME, MODE_PRIVATE)
-            if (query.trim().equals("watch", ignoreCase = true)) {
-                return@withContext GmailPush.registerWatch(prefs).note
-            }
-            val result = GmailPush.check(prefs)
-            onEvents(result.items.map { m -> EventInfo("mail", m.from, m.subject, m.body.take(400), m.at) })
-            result.note
-        }
 
     /** fetch_url: только прямой GET полного URL, без сервисных исключений. */
     private suspend fun fetchUrlData(q: String): String {
@@ -4390,7 +4351,6 @@ $mem
         "read_sms"    -> readSmsData(a.query ?: "", onEvents)
         "read_pushes" -> readPushesData(a.query ?: "", onEvents)
         "read_mail"   -> readMailData(a.query ?: "10", onEvents)
-        "gmail_push"  -> gmailPushData(a.query ?: "check", onEvents)
         "read_apps"   -> readAppsData()
         "open_capability" -> openCapability(a.query ?: "")
         "read_files"  -> readFilesData(onFiles)
@@ -5413,8 +5373,7 @@ private fun ToolSettingCard(
                         singleLine = true
                     )
                 }
-                "read_mail" -> Text("Gmail OAuth подключается в настройках; IMAP — в чате: «настрой почту».", fontSize = 11.sp, color = DsHint, lineHeight = 15.sp)
-                "gmail_push" -> Text("Нужны Gmail OAuth, Pub/Sub topic, bridge URL и секрет в настройках Gmail.", fontSize = 11.sp, color = DsHint, lineHeight = 15.sp)
+                "read_mail" -> Text("Почта настраивается в чате: «настрой почту» (IMAP-аккаунты).", fontSize = 11.sp, color = DsHint, lineHeight = 15.sp)
                 "read_calendar" -> Text("Календари настраиваются в чате: «настрой календарь» (CalDAV-ссылки).", fontSize = 11.sp, color = DsHint, lineHeight = 15.sp)
                 "disk_list", "disk_files", "disk_read", "disk_download", "disk_write", "disk_upload", "disk_delete", "disk_move", "disk_publish" ->
                     Text("Яндекс Диск настраивается в чате: «настрой диск» (логин + пароль приложения).", fontSize = 11.sp, color = DsHint, lineHeight = 15.sp)
@@ -5422,113 +5381,6 @@ private fun ToolSettingCard(
                 else -> Text("Параметры этого инструмента задаются в промпте.", fontSize = 11.sp, color = DsHint, lineHeight = 15.sp)
             }
         }
-    }
-}
-
-@Composable
-private fun GmailSettingsBlock() {
-    val ctx = LocalContext.current
-    val owner = LocalLifecycleOwner.current
-    val prefs = ctx.getSharedPreferences(Prefs.NAME, android.content.Context.MODE_PRIVATE)
-    var clientId by remember { mutableStateOf(GmailOAuth.clientId(prefs)) }
-    var connected by remember { mutableStateOf(GmailOAuth.isConnected(prefs)) }
-    var email by remember { mutableStateOf(GmailOAuth.email(prefs)) }
-    var topic by remember { mutableStateOf(prefs.getString(Prefs.KEY_GMAIL_PUBSUB_TOPIC, "") ?: "") }
-    var bridgeUrl by remember { mutableStateOf(prefs.getString(Prefs.KEY_GMAIL_BRIDGE_URL, "") ?: "") }
-    var bridgeToken by remember { mutableStateOf(prefs.getString(Prefs.KEY_GMAIL_BRIDGE_TOKEN, "") ?: "") }
-    DisposableEffect(owner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                connected = GmailOAuth.isConnected(prefs)
-                email = GmailOAuth.email(prefs)
-            }
-        }
-        owner.lifecycle.addObserver(observer)
-        onDispose { owner.lifecycle.removeObserver(observer) }
-    }
-    Column(Modifier.fillMaxWidth()) {
-        Text(
-            "Gmail OAuth (read-only)",
-            fontSize = 13.sp, color = DsText, fontFamily = Mono
-        )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            "Нужен OAuth Client ID типа Android из Google Cloud. Токены хранятся только на устройстве.",
-            fontSize = 11.sp, color = DsHint, fontFamily = Mono, lineHeight = 16.sp
-        )
-        Spacer(Modifier.height(6.dp))
-        OutlinedTextField(
-            value = clientId,
-            onValueChange = { clientId = it },
-            placeholder = { Text("…apps.googleusercontent.com") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-        Spacer(Modifier.height(8.dp))
-        if (connected) {
-            Text(
-                if (email.isBlank()) "Gmail подключён" else "Подключено: $email",
-                fontSize = 12.sp, color = DsText, fontFamily = Mono
-            )
-            Spacer(Modifier.height(6.dp))
-            RoundIconButton(R.drawable.ic_close, "Отключить Gmail") {
-                GmailOAuth.clear(prefs)
-                connected = false
-                email = ""
-            }
-        } else {
-            RoundIconButton(
-                R.drawable.ic_open_external,
-                "Подключить Gmail",
-                enabled = clientId.isNotBlank(),
-                onClick = {
-                    prefs.edit().putString(Prefs.KEY_GMAIL_CLIENT_ID, clientId.trim()).apply()
-                    (ctx as MainActivity).startActivityForResult(
-                        GmailOAuth.authorizationIntent(ctx), GmailOAuth.RC_AUTH
-                    )
-                }
-            )
-        }
-        Spacer(Modifier.height(12.dp))
-        Text("Gmail push (Pub/Sub bridge)", fontSize = 13.sp, color = DsText, fontFamily = Mono)
-        Spacer(Modifier.height(4.dp))
-        Text(
-            "Для настоящего push нужны topic, Cloud Run bridge и секрет. Инструкция — в gmail-push-bridge/README.md.",
-            fontSize = 11.sp, color = DsHint, fontFamily = Mono, lineHeight = 16.sp
-        )
-        Spacer(Modifier.height(6.dp))
-        OutlinedTextField(
-            value = topic,
-            onValueChange = {
-                topic = it
-                prefs.edit().putString(Prefs.KEY_GMAIL_PUBSUB_TOPIC, it.trim()).apply()
-            },
-            placeholder = { Text("projects/<PROJECT_ID>/topics/gmail-watch") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-        Spacer(Modifier.height(6.dp))
-        OutlinedTextField(
-            value = bridgeUrl,
-            onValueChange = {
-                bridgeUrl = it
-                prefs.edit().putString(Prefs.KEY_GMAIL_BRIDGE_URL, it.trim()).apply()
-            },
-            placeholder = { Text("https://<cloud-run-url>") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-        Spacer(Modifier.height(6.dp))
-        OutlinedTextField(
-            value = bridgeToken,
-            onValueChange = {
-                bridgeToken = it
-                prefs.edit().putString(Prefs.KEY_GMAIL_BRIDGE_TOKEN, it.trim()).apply()
-            },
-            placeholder = { Text("Секрет bridge") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
     }
 }
 
@@ -5660,9 +5512,6 @@ private fun SettingsScreen(
             )
             Spacer(Modifier.height(10.dp))
             RoundIconButton(R.drawable.ic_check, "Сохранить") { onModelSave(urlInput.trim(), keyInput.trim()) }
-
-            SectionHeader("Gmail")
-            GmailSettingsBlock()
 
             // Оповещения настраиваются только в чате через alert_*; отдельной секции в настройках нет.
             SectionHeader("Инструменты")

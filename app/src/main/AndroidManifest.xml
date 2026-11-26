@@ -48,18 +48,6 @@
         </activity>
 
         <!-- Слежение за пушами: включается вручную в Настройках (доступ к уведомлениям) -->
-        <!-- Gmail OAuth redirect: com.example.dispatcher:/oauth2redirect -->
-        <activity
-            android:name="net.openid.appauth.RedirectUriReceiverActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="com.example.dispatcher" />
-            </intent-filter>
-        </activity>
-
         <service
             android:name=".WatchService"
             android:exported="true"

@@ -41,12 +41,6 @@ object Prefs {
     const val KEY_CAPABILITY_RULES = "capability_rules"
     const val KEY_PUSH_IDS = "processed_push_ids"
     const val KEY_EVENT_LOG = "event_log"
-    const val KEY_GMAIL_CLIENT_ID = "gmail_client_id"
-    const val KEY_GMAIL_OAUTH = "gmail_oauth"
-    const val KEY_GMAIL_PUBSUB_TOPIC = "gmail_pubsub_topic"
-    const val KEY_GMAIL_BRIDGE_URL = "gmail_bridge_url"
-    const val KEY_GMAIL_BRIDGE_TOKEN = "gmail_bridge_token"
-    const val KEY_GMAIL_WATCH = "gmail_watch"
     const val KEY_DISK_TOKEN = "disk_token"
     const val KEY_DISK_ACCOUNTS = "disk_accounts"
 }
