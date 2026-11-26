@@ -6,7 +6,8 @@ import org.json.JSONObject
 
 /** Цель приложения для capability. Deep link используется только при verified=true. */
 data class CapabilityTarget(
-    val packageName: String,
+    val packageName: String = "",
+    val label: String? = null,
     val deepLink: String? = null,
     val verified: Boolean = false
 )
@@ -45,7 +46,8 @@ object CapabilityRouter {
                 targets = (0 until targets.length()).map { j ->
                     val t = targets.getJSONObject(j)
                     CapabilityTarget(
-                        packageName = t.getString("package"),
+                        packageName = t.optString("package"),
+                        label = t.optString("label").takeIf { it.isNotBlank() },
                         deepLink = t.optString("deepLink").takeIf { it.isNotBlank() },
                         verified = t.optBoolean("verified", false)
                     )
@@ -92,6 +94,8 @@ object CapabilityRouter {
         .replace(Regex("[^\\p{L}\\p{N}]+"), " ")
         .trim().replace(Regex("\\s+"), " ")
 
+    fun labelKey(text: String): String = normalize(text)
+
     private fun score(query: String, alias: String): Int {
         val q = normalize(query); val a = normalize(alias)
         if (q.isBlank() || a.isBlank()) return 0
@@ -113,35 +117,48 @@ object CapabilityRouter {
         return if (best != null && best.second >= 68) best.first else null
     }
 
+    private data class Candidate(val target: CapabilityTarget, val packageName: String)
+
     fun resolve(
         query: String,
         installedPackages: Set<String>,
         catalog: List<CapabilityDef>,
-        rules: RoutingRules = RoutingRules()
+        rules: RoutingRules = RoutingRules(),
+        installedLabels: Map<String, String> = emptyMap(),
+        usageCounts: Map<String, Int> = emptyMap()
     ): CapabilityResolution {
         val id = capabilityId(query, catalog, rules) ?: return CapabilityResolution.NotFound(query)
         val def = catalog.firstOrNull { it.id == id } ?: return CapabilityResolution.NotFound(query)
         val excluded = rules.excluded[id].orEmpty()
-        val candidates = def.targets.filter { it.packageName in installedPackages && it.packageName !in excluded }
+        val candidates = def.targets.mapNotNull { target ->
+            val pkg = when {
+                target.packageName.isNotBlank() -> target.packageName.takeIf { it in installedPackages }
+                !target.label.isNullOrBlank() -> installedLabels[labelKey(target.label)]
+                else -> null
+            }
+            pkg?.takeIf { it !in excluded }?.let { Candidate(target, it) }
+        }
         rules.preferred[id]?.let { preferred ->
-            val target = candidates.firstOrNull { it.packageName == preferred }
+            val candidate = candidates.firstOrNull { it.packageName == preferred }
                 ?: return CapabilityResolution.NotFound(query)
+            val target = candidate.target
             return target.takeIf { it.verified && !it.deepLink.isNullOrBlank() }
-                ?.let { CapabilityResolution.DeepLink(id, it.packageName, it.deepLink!!) }
-                ?: CapabilityResolution.MainApp(id, target.packageName)
+                ?.let { CapabilityResolution.DeepLink(id, candidate.packageName, it.deepLink!!) }
+                ?: CapabilityResolution.MainApp(id, candidate.packageName)
         }
         if (candidates.isEmpty()) return CapabilityResolution.NotFound(query)
-        val scoredTargets = candidates.map { target ->
-            val linkScore = if (target.verified && !target.deepLink.isNullOrBlank()) 1 else 0
-            target to linkScore
+        val scoredTargets = candidates.map { candidate ->
+            val linkScore = if (candidate.target.verified && !candidate.target.deepLink.isNullOrBlank()) 1000 else 0
+            candidate to linkScore + (usageCounts[candidate.packageName] ?: 0).coerceAtMost(100)
         }
-        val bestLink = scoredTargets.maxOf { it.second }
-        val best = scoredTargets.filter { it.second == bestLink }.map { it.first }
+        val bestScore = scoredTargets.maxOf { it.second }
+        val best = scoredTargets.filter { it.second == bestScore }.map { it.first }
         if (best.size > 1) return CapabilityResolution.Ambiguous(id, best.map { it.packageName })
-        val target = best.single()
+        val candidate = best.single()
+        val target = candidate.target
         return if (target.verified && !target.deepLink.isNullOrBlank()) {
-            CapabilityResolution.DeepLink(id, target.packageName, target.deepLink!!)
-        } else CapabilityResolution.MainApp(id, target.packageName)
+            CapabilityResolution.DeepLink(id, candidate.packageName, target.deepLink!!)
+        } else CapabilityResolution.MainApp(id, candidate.packageName)
     }
 }
 

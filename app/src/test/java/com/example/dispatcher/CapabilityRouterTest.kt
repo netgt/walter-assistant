@@ -63,6 +63,27 @@ class CapabilityRouterTest {
     }
 
     @Test
+    fun usageCountBreaksTieBetweenCandidates() {
+        val result = CapabilityRouter.resolve(
+            "калории", setOf("app.one", "app.two"), catalog,
+            usageCounts = mapOf("app.two" to 12, "app.one" to 1)
+        )
+        assertEquals(CapabilityResolution.MainApp("health.calories", "app.two"), result)
+    }
+
+    @Test
+    fun labelTargetResolvesToInstalledPackage() {
+        val labeled = CapabilityRouter.parseCatalog(
+            """[{"id":"mail.inbox","aliases":["почта"],"targets":[{"label":"Яндекс Почта"}]}]"""
+        )
+        val result = CapabilityRouter.resolve(
+            "почта", emptySet(), labeled,
+            installedLabels = mapOf(CapabilityRouter.labelKey("Яндекс Почта") to "ru.yandex.mail")
+        )
+        assertEquals(CapabilityResolution.MainApp("mail.inbox", "ru.yandex.mail"), result)
+    }
+
+    @Test
     fun notFoundIsHonest() {
         assertTrue(CapabilityRouter.resolve("неизвестная функция", setOf("app.one"), catalog)
             is CapabilityResolution.NotFound)

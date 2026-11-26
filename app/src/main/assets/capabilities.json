@@ -1,155 +1,1245 @@
 [
   {
     "id": "health.calories",
-    "aliases": ["счетчик калорий", "счётчик калорий", "дневник питания", "калории", "питание"],
+    "aliases": [
+      "счетчик калорий",
+      "счётчик калорий",
+      "дневник питания",
+      "калории",
+      "питание"
+    ],
     "targets": [
-      {"package": "com.myfitnesspal.android"},
-      {"package": "ru.yazio.android"},
-      {"package": "com.google.android.apps.fitness"}
+      {
+        "package": "com.myfitnesspal.android"
+      },
+      {
+        "package": "ru.yazio.android"
+      },
+      {
+        "package": "com.google.android.apps.fitness"
+      }
     ]
   },
   {
     "id": "health.workout",
-    "aliases": ["тренировка", "тренировки", "фитнес", "спорт"],
+    "aliases": [
+      "тренировка",
+      "тренировки",
+      "фитнес",
+      "спорт"
+    ],
     "targets": [
-      {"package": "com.google.android.apps.fitness"},
-      {"package": "com.myfitnesspal.android"},
-      {"package": "ru.yazio.android"}
+      {
+        "package": "com.google.android.apps.fitness"
+      },
+      {
+        "package": "com.myfitnesspal.android"
+      },
+      {
+        "package": "ru.yazio.android"
+      }
+    ]
+  },
+  {
+    "id": "health.tracking",
+    "aliases": [
+      "здоровье",
+      "показатели здоровья",
+      "медицинские показатели"
+    ],
+    "targets": [
+      {
+        "package": "com.core.team.renins"
+      }
     ]
   },
   {
     "id": "finance.balance",
-    "aliases": ["баланс", "остаток по карте", "остаток", "мои деньги"],
+    "aliases": [
+      "баланс",
+      "остаток по карте",
+      "остаток",
+      "мои деньги"
+    ],
     "targets": [
-      {"package": "com.sberbankonline"},
-      {"package": "ru.tinkoff"},
-      {"package": "com.idamob.tinkoff"},
-      {"package": "ru.alfabank"},
-      {"package": "ru.vtb"}
+      {
+        "package": "ru.sberbankmobile"
+      },
+      {
+        "package": "com.idamob.tinkoff.android"
+      },
+      {
+        "package": "ru.alfabank.mobile.android"
+      },
+      {
+        "package": "ru.rshb.dbo"
+      },
+      {
+        "package": "ru.ozon.fintech.finance"
+      },
+      {
+        "package": "ru.lewis.dbo"
+      },
+      {
+        "package": "com.bankffin.portfolio"
+      },
+      {
+        "package": "com.altyn.wallet"
+      },
+      {
+        "package": "kz.bankffin.app"
+      },
+      {
+        "package": "com.kwikpay.transfers"
+      },
+      {
+        "package": "ru.albertsoft.acabinet"
+      }
     ]
   },
   {
     "id": "finance.transfers",
-    "aliases": ["переводы", "перевести деньги", "отправить деньги", "платеж"],
+    "aliases": [
+      "переводы",
+      "перевести деньги",
+      "отправить деньги",
+      "платеж"
+    ],
     "targets": [
-      {"package": "com.sberbankonline"},
-      {"package": "ru.tinkoff"},
-      {"package": "com.idamob.tinkoff"},
-      {"package": "ru.alfabank"},
-      {"package": "ru.vtb"}
+      {
+        "package": "ru.sberbankmobile"
+      },
+      {
+        "package": "com.idamob.tinkoff.android"
+      },
+      {
+        "package": "ru.alfabank.mobile.android"
+      },
+      {
+        "package": "ru.rshb.dbo"
+      },
+      {
+        "package": "ru.ozon.fintech.finance"
+      },
+      {
+        "package": "ru.lewis.dbo"
+      },
+      {
+        "package": "com.bankffin.portfolio"
+      },
+      {
+        "package": "com.altyn.wallet"
+      },
+      {
+        "package": "kz.bankffin.app"
+      },
+      {
+        "package": "com.kwikpay.transfers"
+      },
+      {
+        "package": "ru.albertsoft.acabinet"
+      }
+    ]
+  },
+  {
+    "id": "finance.credit",
+    "aliases": [
+      "кредит",
+      "кредитная карта",
+      "долг по карте"
+    ],
+    "targets": [
+      {
+        "package": "ru.sberbankmobile"
+      },
+      {
+        "package": "com.idamob.tinkoff.android"
+      },
+      {
+        "package": "ru.alfabank.mobile.android"
+      },
+      {
+        "package": "ru.rshb.dbo"
+      },
+      {
+        "package": "ru.ozon.fintech.finance"
+      },
+      {
+        "package": "ru.lewis.dbo"
+      },
+      {
+        "package": "com.bankffin.portfolio"
+      },
+      {
+        "package": "com.altyn.wallet"
+      },
+      {
+        "package": "kz.bankffin.app"
+      },
+      {
+        "package": "com.kwikpay.transfers"
+      },
+      {
+        "package": "ru.albertsoft.acabinet"
+      }
+    ]
+  },
+  {
+    "id": "finance.qr",
+    "aliases": [
+      "оплата по qr",
+      "qr оплата",
+      "сканировать для оплаты",
+      "мир пей"
+    ],
+    "targets": [
+      {
+        "package": "ru.nspk.mirpay"
+      },
+      {
+        "package": "com.kwikpay.transfers"
+      },
+      {
+        "package": "ru.alfabank.mobile.android"
+      },
+      {
+        "package": "com.idamob.tinkoff.android"
+      },
+      {
+        "package": "ru.sberbankmobile"
+      },
+      {
+        "package": "ru.ozon.fintech.finance"
+      }
+    ]
+  },
+  {
+    "id": "finance.mobile_operator",
+    "aliases": [
+      "мобильный оператор",
+      "сотовая связь",
+      "баланс телефона",
+      "мегафон",
+      "мтс"
+    ],
+    "targets": [
+      {
+        "package": "ru.megafon.mlk"
+      },
+      {
+        "package": "ru.tinkoff.mvno"
+      },
+      {
+        "package": "ru.lewis.dbo"
+      }
     ]
   },
   {
     "id": "food.order",
-    "aliases": ["заказ еды", "заказать еду", "доставка еды", "еда"],
+    "aliases": [
+      "заказ еды",
+      "заказать еду",
+      "доставка еды",
+      "продукты",
+      "еда"
+    ],
     "targets": [
-      {"package": "ru.foodfox"},
-      {"package": "com.deliveryclub"},
-      {"package": "ru.sbermarket"},
-      {"package": "com.glovo"}
+      {
+        "package": "ru.vkusvill"
+      },
+      {
+        "package": "ru.yandex.taxi"
+      }
     ]
   },
   {
     "id": "food.repeat_order",
-    "aliases": ["повтор заказа", "повторить заказ", "заказать снова", "как в прошлый раз"],
+    "aliases": [
+      "повтор заказа",
+      "повторить заказ",
+      "заказать снова",
+      "как в прошлый раз"
+    ],
     "targets": [
-      {"package": "ru.foodfox"},
-      {"package": "com.deliveryclub"},
-      {"package": "ru.sbermarket"},
-      {"package": "com.glovo"}
+      {
+        "package": "ru.vkusvill"
+      },
+      {
+        "package": "ru.ozon.app.android"
+      },
+      {
+        "package": "com.avito.android"
+      }
     ]
   },
   {
     "id": "navigation.route",
-    "aliases": ["маршрут", "поехать", "дорога", "навигатор", "навигация"],
+    "aliases": [
+      "маршрут",
+      "поехать",
+      "дорога",
+      "навигатор",
+      "навигация",
+      "карты"
+    ],
     "targets": [
-      {"package": "com.google.android.apps.maps"},
-      {"package": "ru.yandex.maps"},
-      {"package": "ru.yandex.navigator"}
+      {
+        "package": "com.google.android.apps.maps"
+      },
+      {
+        "package": "ru.yandex.yandexmaps"
+      }
+    ]
+  },
+  {
+    "id": "navigation.compass",
+    "aliases": [
+      "компас",
+      "направление",
+      "стороны света"
+    ],
+    "targets": [
+      {
+        "package": "com.vivo.compass"
+      }
     ]
   },
   {
     "id": "transport.taxi",
-    "aliases": ["такси", "вызвать машину", "поездка"],
+    "aliases": [
+      "такси",
+      "вызвать машину",
+      "поездка",
+      "яндекс го"
+    ],
     "targets": [
-      {"package": "ru.yandex.taxi"},
-      {"package": "com.uber"},
-      {"package": "ru.citymobil"}
+      {
+        "package": "ru.yandex.taxi"
+      }
     ]
   },
   {
     "id": "communication.chat",
-    "aliases": ["чат", "сообщения", "написать сообщение", "мессенджер"],
+    "aliases": [
+      "чат",
+      "сообщения",
+      "написать сообщение",
+      "мессенджер",
+      "телеграм"
+    ],
     "targets": [
-      {"package": "org.telegram.messenger"},
-      {"package": "ru.oneme.app"},
-      {"package": "com.whatsapp"},
-      {"package": "com.vkontakte.android"}
+      {
+        "package": "org.telegram.messenger"
+      },
+      {
+        "package": "ru.oneme.app"
+      },
+      {
+        "package": "com.tumblr"
+      }
     ]
   },
   {
-    "id": "documents.scan",
-    "aliases": ["скан документа", "сканировать документ", "сканер", "сделать скан"],
+    "id": "communication.video_call",
+    "aliases": [
+      "видеозвонок",
+      "созвон",
+      "мит",
+      "meet"
+    ],
     "targets": [
-      {"package": "com.google.android.apps.docs"},
-      {"package": "com.microsoft.office.officelens"},
-      {"package": "com.adobe.scan.android"}
+      {
+        "package": "com.google.android.apps.tachyon"
+      }
     ]
   },
   {
-    "id": "shopping.repeat",
-    "aliases": ["повтор покупки", "повторить покупку", "купить снова", "заказать опять"],
+    "id": "communication.call",
+    "aliases": [
+      "позвонить",
+      "звонок",
+      "набрать номер",
+      "телефон"
+    ],
     "targets": [
-      {"package": "ru.sbermarket"},
-      {"package": "ru.ozon"},
-      {"package": "ru.wildberries"},
-      {"package": "ru.lamoda"}
+      {
+        "package": "com.android.contacts",
+        "deepLink": "tel:",
+        "verified": true
+      }
     ]
   },
   {
-    "id": "news.read",
-    "aliases": ["новости", "читать новости", "лента новостей"],
+    "id": "communication.sms",
+    "aliases": [
+      "смс",
+      "написать смс",
+      "отправить смс",
+      "сообщения"
+    ],
     "targets": [
-      {"package": "org.telegram.messenger"},
-      {"package": "ru.oneme.app"},
-      {"package": "com.google.android.apps.news"},
-      {"package": "com.yandex.searchapp"}
+      {
+        "package": "com.android.mms",
+        "deepLink": "smsto:",
+        "verified": true
+      }
     ]
   },
   {
-    "id": "photos.gallery",
-    "aliases": ["галерея", "фотографии", "мои фото", "фото"],
+    "id": "communication.contacts",
+    "aliases": [
+      "контакты",
+      "найти контакт",
+      "телефонная книга"
+    ],
     "targets": [
-      {"package": "com.google.android.apps.photos"},
-      {"package": "com.google.android.gallery3d"},
-      {"package": "com.sec.android.gallery3d"}
-    ]
-  },
-  {
-    "id": "music.play",
-    "aliases": ["музыка", "песни", "включить музыку", "плеер"],
-    "targets": [
-      {"package": "ru.yandex.music"},
-      {"package": "com.spotify.music"},
-      {"package": "com.google.android.apps.youtube.music"}
-    ]
-  },
-  {
-    "id": "weather.forecast",
-    "aliases": ["погода", "прогноз погоды", "дождь", "температура"],
-    "targets": [
-      {"package": "ru.yandex.weather"},
-      {"package": "com.google.android.apps.weather"},
-      {"package": "com.accuweather.android"}
+      {
+        "package": "com.android.contacts"
+      }
     ]
   },
   {
     "id": "mail.inbox",
-    "aliases": ["почта", "входящие", "письма", "открыть почту"],
+    "aliases": [
+      "почта",
+      "входящие",
+      "письма",
+      "открыть почту"
+    ],
     "targets": [
-      {"package": "com.google.android.gm"},
-      {"package": "ru.yandex.mail"},
-      {"package": "com.microsoft.office.outlook"}
+      {
+        "package": "com.google.android.gm"
+      },
+      {
+        "package": "ru.yandex.mail"
+      }
+    ]
+  },
+  {
+    "id": "mail.compose",
+    "aliases": [
+      "написать письмо",
+      "новое письмо",
+      "создать письмо"
+    ],
+    "targets": [
+      {
+        "package": "com.google.android.gm",
+        "deepLink": "mailto:",
+        "verified": true
+      },
+      {
+        "package": "ru.yandex.mail",
+        "deepLink": "mailto:",
+        "verified": true
+      }
+    ]
+  },
+  {
+    "id": "documents.scan",
+    "aliases": [
+      "скан документа",
+      "сканировать документ",
+      "сканер",
+      "сделать скан"
+    ],
+    "targets": [
+      {
+        "package": "com.google.android.apps.docs.editors.docs"
+      },
+      {
+        "package": "com.android.camera"
+      }
+    ]
+  },
+  {
+    "id": "documents.word",
+    "aliases": [
+      "документы",
+      "текстовый документ",
+      "google docs"
+    ],
+    "targets": [
+      {
+        "package": "com.google.android.apps.docs.editors.docs"
+      }
+    ]
+  },
+  {
+    "id": "documents.sheets",
+    "aliases": [
+      "таблицы",
+      "эксель",
+      "google sheets"
+    ],
+    "targets": [
+      {
+        "package": "com.google.android.apps.docs.editors.sheets"
+      }
+    ]
+  },
+  {
+    "id": "documents.slides",
+    "aliases": [
+      "презентации",
+      "слайды",
+      "google slides"
+    ],
+    "targets": [
+      {
+        "package": "com.google.android.apps.docs.editors.slides"
+      }
+    ]
+  },
+  {
+    "id": "documents.notes",
+    "aliases": [
+      "заметки",
+      "заметка",
+      "notes"
+    ],
+    "targets": [
+      {
+        "package": "com.vivo.notes"
+      }
+    ]
+  },
+  {
+    "id": "documents.files",
+    "aliases": [
+      "файлы",
+      "файловый менеджер",
+      "диспетчер файлов"
+    ],
+    "targets": [
+      {
+        "package": "com.android.filemanager"
+      },
+      {
+        "package": "com.google.android.apps.nbu.files"
+      }
+    ]
+  },
+  {
+    "id": "shopping.repeat",
+    "aliases": [
+      "повтор покупки",
+      "повторить покупку",
+      "купить снова",
+      "заказать опять"
+    ],
+    "targets": [
+      {
+        "package": "ru.ozon.app.android"
+      },
+      {
+        "package": "com.avito.android"
+      },
+      {
+        "package": "ru.vkusvill"
+      }
+    ]
+  },
+  {
+    "id": "shopping.market",
+    "aliases": [
+      "магазин",
+      "покупки",
+      "маркетплейс"
+    ],
+    "targets": [
+      {
+        "package": "ru.ozon.app.android"
+      },
+      {
+        "package": "com.avito.android"
+      },
+      {
+        "package": "ru.vkusvill"
+      }
+    ]
+  },
+  {
+    "id": "shopping.compare_prices",
+    "aliases": [
+      "сравнить цены",
+      "цены",
+      "прайс"
+    ],
+    "targets": [
+      {
+        "package": "ru.ozon.app.android"
+      },
+      {
+        "package": "com.avito.android"
+      }
+    ]
+  },
+  {
+    "id": "shopping.stores",
+    "aliases": [
+      "магазин приложений",
+      "установить приложение",
+      "app store"
+    ],
+    "targets": [
+      {
+        "package": "com.android.vending"
+      },
+      {
+        "package": "com.huawei.appmarket"
+      },
+      {
+        "package": "ru.vk.store"
+      },
+      {
+        "package": "com.vivo.appstore"
+      },
+      {
+        "package": "com.iqoo.website"
+      }
+    ]
+  },
+  {
+    "id": "news.read",
+    "aliases": [
+      "новости",
+      "читать новости",
+      "лента новостей"
+    ],
+    "targets": [
+      {
+        "package": "org.telegram.messenger"
+      },
+      {
+        "package": "ru.oneme.app"
+      },
+      {
+        "package": "com.google.android.googlequicksearchbox"
+      },
+      {
+        "package": "com.yandex.browser"
+      }
+    ]
+  },
+  {
+    "id": "photos.gallery",
+    "aliases": [
+      "галерея",
+      "фотографии",
+      "мои фото",
+      "фото",
+      "альбомы"
+    ],
+    "targets": [
+      {
+        "package": "com.google.android.apps.photos"
+      },
+      {
+        "package": "com.vivo.gallery"
+      }
+    ]
+  },
+  {
+    "id": "photos.edit",
+    "aliases": [
+      "редактор фото",
+      "редактировать фото",
+      "snapseed"
+    ],
+    "targets": [
+      {
+        "package": "com.niksoftware.snapseed"
+      },
+      {
+        "package": "com.google.android.apps.photos"
+      },
+      {
+        "package": "com.vivo.gallery"
+      }
+    ]
+  },
+  {
+    "id": "music.play",
+    "aliases": [
+      "музыка",
+      "песни",
+      "включить музыку",
+      "плеер",
+      "яндекс музыка"
+    ],
+    "targets": [
+      {
+        "package": "ru.yandex.music"
+      },
+      {
+        "package": "com.android.bbkmusic"
+      }
+    ]
+  },
+  {
+    "id": "video.watch",
+    "aliases": [
+      "видео",
+      "смотреть видео",
+      "ютуб",
+      "вк видео"
+    ],
+    "targets": [
+      {
+        "package": "com.google.android.youtube"
+      },
+      {
+        "package": "com.vk.vkvideo"
+      },
+      {
+        "package": "com.android.VideoPlayer"
+      },
+      {
+        "package": "com.yandex.browser"
+      }
+    ]
+  },
+  {
+    "id": "audio.record",
+    "aliases": [
+      "диктофон",
+      "записать аудио",
+      "голосовая запись"
+    ],
+    "targets": [
+      {
+        "package": "com.vivo.soundrecorder"
+      }
+    ]
+  },
+  {
+    "id": "weather.forecast",
+    "aliases": [
+      "погода",
+      "прогноз погоды",
+      "дождь",
+      "температура"
+    ],
+    "targets": [
+      {
+        "package": "com.vivo.weather"
+      }
+    ]
+  },
+  {
+    "id": "system.settings",
+    "aliases": [
+      "настройки",
+      "настройки телефона",
+      "системные настройки"
+    ],
+    "targets": [
+      {
+        "package": "com.android.settings"
+      }
+    ]
+  },
+  {
+    "id": "system.themes",
+    "aliases": [
+      "темы",
+      "оформление",
+      "обои"
+    ],
+    "targets": [
+      {
+        "package": "com.bbk.theme"
+      }
+    ]
+  },
+  {
+    "id": "system.lock",
+    "aliases": [
+      "блокировка",
+      "безопасность",
+      "блокировка экрана"
+    ],
+    "targets": [
+      {
+        "package": "com.android.settings"
+      },
+      {
+        "package": "com.android.bbk.lockscreen3"
+      }
+    ]
+  },
+  {
+    "id": "system.simple_mode",
+    "aliases": [
+      "простой вид",
+      "простой режим"
+    ],
+    "targets": [
+      {
+        "package": "com.vivo.simplelauncher"
+      }
+    ]
+  },
+  {
+    "id": "system.feedback",
+    "aliases": [
+      "обратная связь",
+      "отправить отзыв",
+      "feedback"
+    ],
+    "targets": [
+      {
+        "package": "com.vivo.feedback"
+      }
+    ]
+  },
+  {
+    "id": "system.cloud",
+    "aliases": [
+      "облако",
+      "резервная копия",
+      "vivo cloud"
+    ],
+    "targets": [
+      {
+        "package": "com.bbk.cloud"
+      },
+      {
+        "package": "ru.yandex.disk"
+      }
+    ]
+  },
+  {
+    "id": "system.imanager",
+    "aliases": [
+      "imanager",
+      "i manager",
+      "диспетчер телефона"
+    ],
+    "targets": [
+      {
+        "package": "com.vivo.imanager"
+      }
+    ]
+  },
+  {
+    "id": "system.easyshare",
+    "aliases": [
+      "easy share",
+      "поделиться файлами",
+      "передать файлы"
+    ],
+    "targets": [
+      {
+        "package": "com.vivo.easyshare"
+      },
+      {
+        "package": "com.google.android.apps.nbu.files"
+      },
+      {
+        "package": "com.android.filemanager"
+      }
+    ]
+  },
+  {
+    "id": "tools.calculator",
+    "aliases": [
+      "калькулятор",
+      "посчитать",
+      "вычислить"
+    ],
+    "targets": [
+      {
+        "package": "com.vivo.calculator"
+      }
+    ]
+  },
+  {
+    "id": "tools.clock",
+    "aliases": [
+      "часы",
+      "будильник",
+      "таймер",
+      "секундомер"
+    ],
+    "targets": [
+      {
+        "package": "com.android.deskclock"
+      }
+    ]
+  },
+  {
+    "id": "tools.authenticator",
+    "aliases": [
+      "аутентификатор",
+      "коды двухфакторной аутентификации",
+      "2fa"
+    ],
+    "targets": [
+      {
+        "package": "com.google.android.apps.authenticator2"
+      },
+      {
+        "package": "ru.yandex.key"
+      },
+      {
+        "package": "com.kaspersky.passwordmanager"
+      }
+    ]
+  },
+  {
+    "id": "tools.passwords",
+    "aliases": [
+      "пароли",
+      "менеджер паролей",
+      "ключи"
+    ],
+    "targets": [
+      {
+        "package": "com.kaspersky.passwordmanager"
+      },
+      {
+        "package": "ru.yandex.key"
+      },
+      {
+        "package": "com.google.android.apps.authenticator2"
+      }
+    ]
+  },
+  {
+    "id": "tools.browser",
+    "aliases": [
+      "браузер",
+      "открыть сайт",
+      "интернет"
+    ],
+    "targets": [
+      {
+        "package": "com.android.chrome"
+      },
+      {
+        "package": "com.yandex.browser"
+      },
+      {
+        "package": "com.vivo.browser"
+      }
+    ]
+  },
+  {
+    "id": "tools.search",
+    "aliases": [
+      "поиск",
+      "гугл",
+      "найти в интернете"
+    ],
+    "targets": [
+      {
+        "package": "com.google.android.googlequicksearchbox"
+      },
+      {
+        "package": "com.android.chrome"
+      },
+      {
+        "package": "com.yandex.browser"
+      }
+    ]
+  },
+  {
+    "id": "tools.ai",
+    "aliases": [
+      "ии ассистент",
+      "нейросеть",
+      "deepseek",
+      "qwen",
+      "kimi",
+      "алиса"
+    ],
+    "targets": [
+      {
+        "package": "com.deepseek.chat"
+      },
+      {
+        "package": "com.tongyi.intl"
+      },
+      {
+        "package": "com.moonshot.kimichat"
+      },
+      {
+        "package": "com.yandex.aliceapp"
+      },
+      {
+        "package": "com.example.dispatcher"
+      }
+    ]
+  },
+  {
+    "id": "tools.vpn",
+    "aliases": [
+      "впн",
+      "vpn",
+      "openvpn",
+      "amnezia",
+      "запрет"
+    ],
+    "targets": [
+      {
+        "package": "net.openvpn.openvpn"
+      },
+      {
+        "package": "org.amnezia.vpn"
+      },
+      {
+        "package": "io.github.zapretkvn.android"
+      },
+      {
+        "package": "com.adguard.android.contentblocker"
+      }
+    ]
+  },
+  {
+    "id": "tools.adblock",
+    "aliases": [
+      "адблок",
+      "блокировка рекламы",
+      "adguard"
+    ],
+    "targets": [
+      {
+        "package": "com.adguard.android.contentblocker"
+      },
+      {
+        "package": "io.github.zapretkvn.android"
+      }
+    ]
+  },
+  {
+    "id": "tools.home",
+    "aliases": [
+      "умный дом",
+      "домашние устройства",
+      "xiaomi home",
+      "tapo"
+    ],
+    "targets": [
+      {
+        "package": "com.xiaomi.smarthome"
+      },
+      {
+        "package": "com.kojima.home"
+      },
+      {
+        "package": "com.hommyn.app"
+      },
+      {
+        "package": "com.connect.enduser"
+      },
+      {
+        "package": "com.tplink.iot"
+      },
+      {
+        "package": "com.ifeelsystems.safesmart"
+      },
+      {
+        "package": "com.thermtouch.smart"
+      }
+    ]
+  },
+  {
+    "id": "devices.remote_camera",
+    "aliases": [
+      "камера наблюдения",
+      "видеонаблюдение",
+      "endoscope",
+      "inskam"
+    ],
+    "targets": [
+      {
+        "package": "com.connect.enduser"
+      },
+      {
+        "package": "com.kojima.home"
+      },
+      {
+        "package": "com.ypcc.otgcamera"
+      },
+      {
+        "package": "by.alfabank.insync3"
+      }
+    ]
+  },
+  {
+    "id": "devices.mesh",
+    "aliases": [
+      "meshtastic",
+      "меш сеть",
+      "mesh"
+    ],
+    "targets": [
+      {
+        "package": "com.geeksville.mesh"
+      }
+    ]
+  },
+  {
+    "id": "devices.remote",
+    "aliases": [
+      "пульт",
+      "умный пульт",
+      "smart remote"
+    ],
+    "targets": [
+      {
+        "package": "com.vivo.vhome"
+      }
+    ]
+  },
+  {
+    "id": "devices.energy",
+    "aliases": [
+      "россети",
+      "электричество",
+      "счетчик электроэнергии"
+    ],
+    "targets": [
+      {
+        "package": "com.rosseti.rossetimr"
+      }
+    ]
+  },
+  {
+    "id": "health.doctor",
+    "aliases": [
+      "врач",
+      "доктор",
+      "медицина",
+      "docmed",
+      "medsi"
+    ],
+    "targets": [
+      {
+        "package": "ru.docmed.app"
+      },
+      {
+        "package": "ru.docmedonline.app"
+      },
+      {
+        "package": "ru.mts.smartmed"
+      }
+    ]
+  },
+  {
+    "id": "services.profi",
+    "aliases": [
+      "профи",
+      "профи ру",
+      "специалисты",
+      "услуги"
+    ],
+    "targets": [
+      {
+        "package": "ru.profi.client"
+      }
+    ]
+  },
+  {
+    "id": "gov.services",
+    "aliases": [
+      "госуслуги",
+      "государственные услуги"
+    ],
+    "targets": [
+      {
+        "package": "ru.rostel"
+      }
+    ]
+  },
+  {
+    "id": "tools.calendar",
+    "aliases": [
+      "календарь",
+      "события",
+      "расписание"
+    ],
+    "targets": [
+      {
+        "package": "com.google.android.calendar"
+      },
+      {
+        "package": "com.yandex.calendar.app"
+      }
+    ]
+  },
+  {
+    "id": "tools.keyboard",
+    "aliases": [
+      "клавиатура",
+      "яндекс клавиатура"
+    ],
+    "targets": [
+      {
+        "package": "ru.yandex.androidkeyboard"
+      }
+    ]
+  },
+  {
+    "id": "tools.voice_assistant",
+    "aliases": [
+      "голосовой ассистент",
+      "алиса",
+      "google ассистент"
+    ],
+    "targets": [
+      {
+        "package": "com.yandex.aliceapp"
+      },
+      {
+        "package": "com.google.android.googlequicksearchbox"
+      }
+    ]
+  },
+  {
+    "id": "social.video",
+    "aliases": [
+      "соцсети",
+      "видео соцсети",
+      "tumblr"
+    ],
+    "targets": [
+      {
+        "package": "com.tumblr"
+      },
+      {
+        "package": "com.vk.vkvideo"
+      }
+    ]
+  },
+  {
+    "id": "media.loop",
+    "aliases": [
+      "loop",
+      "зациклить видео"
+    ],
+    "targets": [
+      {
+        "package": "ru.loop.app"
+      }
+    ]
+  },
+  {
+    "id": "storage.disk",
+    "aliases": [
+      "диск",
+      "яндекс диск",
+      "облачное хранилище"
+    ],
+    "targets": [
+      {
+        "package": "ru.yandex.disk"
+      },
+      {
+        "package": "com.bbk.cloud"
+      }
     ]
   }
 ]
