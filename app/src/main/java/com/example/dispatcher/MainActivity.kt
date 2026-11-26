@@ -2149,6 +2149,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     var menuOpen by remember { mutableStateOf(false) }
+                    val isLauncherMode = remember(eventDrainTick.value) { LauncherMode.isDefaultHome(ctx) }
                     Box(Modifier.fillMaxWidth().weight(1f)) {
                         LazyColumn(
                             Modifier
@@ -2276,7 +2277,7 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         // меню «телефон + настройки» плавает поверх чата, не занимая место в раскладке
-                        if (menuOpen) {
+                        if (menuOpen && isLauncherMode) {
                             Column(
                                 Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = 8.dp),
                                 horizontalAlignment = Alignment.End,
@@ -2320,8 +2321,10 @@ class MainActivity : ComponentActivity() {
                         input = input,
                         onInputChange = { input = it },
                         onSend = { send(input) },
+                        launcherMode = isLauncherMode,
                         menuOpen = menuOpen,
                         onToggleMenu = { menuOpen = !menuOpen },
+                        onOpenSettings = { showSettings = true },
                         onShowTools = {
                             // инструменты — карточками с полными настройками
                             messages += Msg(false, "", helpKind = "tools")
@@ -5160,8 +5163,10 @@ private fun InputBar(
     input: String,
     onInputChange: (String) -> Unit,
     onSend: () -> Unit,
+    launcherMode: Boolean,
     menuOpen: Boolean,
     onToggleMenu: () -> Unit,
+    onOpenSettings: () -> Unit,
     onShowTools: () -> Unit,
     activeLabel: String?,
     clearEnabled: Boolean,
@@ -5240,12 +5245,16 @@ private fun InputBar(
                 Spacer(Modifier.width(6.dp))
                 RoundIconButton(R.drawable.ic_send, "Отправить", enabled = input.isNotBlank(), onClick = onSend)
                 Spacer(Modifier.width(6.dp))
-                RoundIconButton(
-                    R.drawable.ic_add,
-                    if (menuOpen) "Закрыть меню" else "Меню",
-                    modifier = Modifier.rotate(if (menuOpen) 45f else 0f),
-                    onClick = onToggleMenu
-                )
+                if (launcherMode) {
+                    RoundIconButton(
+                        R.drawable.ic_add,
+                        if (menuOpen) "Закрыть меню" else "Меню",
+                        modifier = Modifier.rotate(if (menuOpen) 45f else 0f),
+                        onClick = onToggleMenu
+                    )
+                } else {
+                    RoundIconButton(R.drawable.ic_settings, "Настройки", onClick = onOpenSettings)
+                }
             }
         }
     }
