@@ -40,6 +40,7 @@ object Prefs {
     const val KEY_CORS_LOL_URL = "cors_lol_url"
     const val KEY_CAPABILITY_RULES = "capability_rules"
     const val KEY_PUSH_IDS = "processed_push_ids"
+    const val KEY_EVENT_LOG = "event_log"
     const val KEY_DISK_TOKEN = "disk_token"
     const val KEY_DISK_ACCOUNTS = "disk_accounts"
 }

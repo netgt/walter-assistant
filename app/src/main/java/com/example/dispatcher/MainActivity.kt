@@ -783,12 +783,17 @@ class MainActivity : ComponentActivity() {
                     // activeKey не трогаем: карточки статичны — ни подсветки, ни метки «ветки»
                 }
 
-                // события, пришедшие пока чат был закрыт
+                // события, пришедшие пока чат был закрыт/процесс умирал:补缺 из долговечного журнала без дублей
                 LaunchedEffect(Unit) {
+                    val present = messages.mapNotNull { it.event }.map { eventKey(it) }.toMutableSet()
                     EventHub.drain(ctx).forEach { e ->
-                        messages += Msg(false, "", e)
-                        persist()
-                        scrollSignal++
+                        val k = eventKey(e)
+                        if (k !in present) {
+                            present += k
+                            messages += Msg(false, "", e)
+                            persist()
+                            scrollSignal++
+                        }
                     }
                 }
 
