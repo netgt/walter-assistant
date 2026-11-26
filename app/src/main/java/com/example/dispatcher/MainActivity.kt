@@ -13,6 +13,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.service.notification.NotificationListenerService
 import android.provider.CalendarContract
 import android.provider.Settings
@@ -360,15 +362,26 @@ class MainActivity : ComponentActivity() {
     @Volatile var walterForeground = true
         private set
 
+    private val nlsHandler = Handler(Looper.getMainLooper())
+
+    private fun requestNlsRebind(reason: String) {
+        if (Build.VERSION.SDK_INT < 24) return
+        // На части устройств первый запрос после запуска игнорируется — повторяем после готовности системы.
+        listOf(0L, 1500L).forEach { delayMs ->
+            nlsHandler.postDelayed({
+                runCatching {
+                    NotificationListenerService.requestRebind(ComponentName(this, WatchService::class.java))
+                    DebugLog.log("watch-service", "requestRebind: $reason")
+                }
+            }, delayMs)
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         walterForeground = true
         eventDrainTick.value++
-        if (Build.VERSION.SDK_INT >= 24) {
-            runCatching {
-                NotificationListenerService.requestRebind(ComponentName(this, WatchService::class.java))
-            }
-        }
+        requestNlsRebind("onResume")
     }
 
     override fun onPause() {
@@ -389,6 +402,7 @@ class MainActivity : ComponentActivity() {
         DebugLog.log("e2e", "onNewIntent: ${intent.getStringExtra("e2e_b64")?.take(20)}")
         setIntent(intent)
         eventDrainTick.value++
+        requestNlsRebind("onNewIntent")
         val b64 = intent.getStringExtra("e2e_b64")
         if (b64 != null && BuildConfig.DEBUG) {
             intent.removeExtra("e2e_b64")

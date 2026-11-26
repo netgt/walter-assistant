@@ -5,6 +5,8 @@ import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Intent
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
@@ -48,18 +50,31 @@ class WatchService : NotificationListenerService() {
     }
 
     private val lastSeen = HashMap<String, Long>()
+    private val rebindHandler = Handler(Looper.getMainLooper())
+
+    private fun requestRebind(reason: String) {
+        if (Build.VERSION.SDK_INT < 24) return
+        rebindHandler.postDelayed({
+            runCatching {
+                NotificationListenerService.requestRebind(ComponentName(this, WatchService::class.java))
+                DebugLog.log("watch-service", "requestRebind: $reason")
+            }.onFailure {
+                DebugLog.log("watch-service", "rebind $reason: ${it.message ?: it.javaClass.simpleName}")
+            }
+        }, 700)
+    }
+
+    /** Система разорвала связь NLS: не ждём следующего запуска активности. */
+    override fun onListenerDisconnected() {
+        super.onListenerDisconnected()
+        DebugLog.log("watch-service", "onListenerDisconnected")
+        requestRebind("listenerDisconnected")
+    }
 
     /** После смахивания из recents просим систему заново связать NLS при следующем запуске. */
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
-        if (Build.VERSION.SDK_INT >= 24) {
-            runCatching {
-                NotificationListenerService.requestRebind(ComponentName(this, WatchService::class.java))
-                DebugLog.log("watch-service", "onTaskRemoved: запрошен rebind NLS")
-            }.onFailure {
-                DebugLog.log("watch-service", "onTaskRemoved rebind: ${it.message ?: it.javaClass.simpleName}")
-            }
-        }
+        requestRebind("taskRemoved")
     }
 
     private fun alreadyProcessed(sbn: StatusBarNotification, text: String): Boolean {
