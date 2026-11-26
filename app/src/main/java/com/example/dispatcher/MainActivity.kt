@@ -3425,17 +3425,17 @@ $mem
     // ─── Инструменты чтения данных (исполняются локально, результат — модели) ───
     private fun readSmsData(query: String, onEvents: (List<EventInfo>) -> Unit): String {
         val allRows = (if (canReadSms()) smsRows(30) else eventSmsRows())
-        val rows = EventFilter.filterSms(allRows, query)
+        val rows = EventSort.latest(EventFilter.filterSms(allRows, query), 50) { it.third }
         if (rows.isEmpty()) {
             return if (query.isBlank()) "SMS не найдено (проверь доступ к SMS-истории: «+» → «Настройки»)."
             else "SMS по фильтру «$query» не найдено."
         }
-        // Модель и карточки получают один фильтрованный набор.
-        onEvents(rows.take(20).map { EventInfo("sms", it.first, "", it.second.take(300), it.third) })
+        // Модель и карточки получают один фильтрованный набор, свежие события — внизу.
+        onEvents(rows.takeLast(20).map { EventInfo("sms", it.first, "", it.second.take(300), it.third) })
         val df = SimpleDateFormat("dd.MM HH:mm", Locale.getDefault())
         val filterText = if (query.isBlank()) "" else " — фильтр «$query»"
-        return "Последние SMS (${minOf(rows.size, 50)}$filterText):\n" +
-            rows.take(50).joinToString("\n") {
+        return "Последние SMS (${rows.size}$filterText):\n" +
+            rows.joinToString("\n") {
                 "[${df.format(Date(it.third))}] ${it.first}: ${it.second.take(160).replace("\n", " ")}"
             }
     }
@@ -3445,7 +3445,7 @@ $mem
             .mapNotNull { it.event }
             .filter { it.kind == "push" || it.kind == "watch" }
             .let { EventFilter.filterPushes(it, query) }
-            .takeLast(20)
+            .let { EventSort.latest(it, 20) { e -> e.at } }
         if (pushes.isEmpty()) {
             return if (query.isBlank()) "Пушей пока не было." else "Пуши по фильтру «$query» не найдены."
         }
