@@ -33,8 +33,8 @@ android {
         applicationId = "com.example.dispatcher"
         minSdk = 26
         targetSdk = 35
-        versionCode = 255
-        versionName = "1.47.14"
+        versionCode = 256
+        versionName = "1.47.15"
         multiDexEnabled = true
     }
 

@@ -2286,6 +2286,17 @@ class MainActivity : ComponentActivity() {
                                     menuOpen = false
                                     startActivity(Intent(Intent.ACTION_DIAL).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                                 })
+                                RoundIconButton(R.drawable.ic_sms, "SMS", onClick = {
+                                    menuOpen = false
+                                    val smsIntent = Intent(Intent.ACTION_MAIN)
+                                        .addCategory(Intent.CATEGORY_APP_MESSAGING)
+                                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    if (smsIntent.resolveActivity(packageManager) != null) {
+                                        startActivity(smsIntent)
+                                    } else {
+                                        openApp("Сообщения")
+                                    }
+                                })
                                 RoundIconButton(R.drawable.ic_settings, "Настройки", onClick = {
                                     menuOpen = false
                                     showSettings = true
