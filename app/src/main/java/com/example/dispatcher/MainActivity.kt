@@ -12,6 +12,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.CalendarContract
+import android.provider.MediaStore
 import android.provider.Settings
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -2273,6 +2274,17 @@ class MainActivity : ComponentActivity() {
                                         startActivity(smsIntent)
                                     } else {
                                         openApp("Сообщения")
+                                    }
+                                })
+                                RoundIconButton(R.drawable.ic_camera, "Камера", onClick = {
+                                    menuOpen = false
+                                    val cameraIntent = Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA)
+                                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    if (cameraIntent.resolveActivity(packageManager) != null) {
+                                        startActivity(cameraIntent)
+                                    } else {
+                                        startActivity(Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+                                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                                     }
                                 })
                                 RoundIconButton(R.drawable.ic_settings, "Настройки", onClick = {

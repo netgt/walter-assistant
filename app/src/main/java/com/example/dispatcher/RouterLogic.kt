@@ -123,9 +123,12 @@ fun eventKey(e: EventInfo): String = "${e.kind}|${e.source}|${e.at}"
 /** Ключ карточки события из списка тула: уникален по позиции, треды живут под ним. */
 fun eventListKey(e: EventInfo, idx: Int): String = eventKey(e) + "|lst$idx"
 
-/** Время события для отображения на карточке. */
+/** Дата и время события для карточки: пуши/SMS — с секундами, остальные — как раньше. */
 fun eventTime(e: EventInfo): String =
-    SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(e.at))
+    SimpleDateFormat(
+        if (e.kind == "push" || e.kind == "sms") "dd.MM.yyyy HH:mm:ss" else "HH:mm",
+        Locale.getDefault()
+    ).format(Date(e.at))
 
 
 /** Машина многошаговых планов «шаг -> подтверди -> шаг …» — чистая, без Android (JVM-тесты). */
