@@ -9,9 +9,21 @@ object EventHub {
 
     @Volatile
     private var handler: ((EventInfo) -> Unit)? = null
+    private var attachGeneration = 0L
 
-    fun attach(h: ((EventInfo) -> Unit)?) {
+    /** Возвращает токен подписки: старая активность не сможет отключить обработчик новой. */
+    @Synchronized
+    fun attach(h: (EventInfo) -> Unit): Long {
+        attachGeneration++
         handler = h
+        DebugLog.log("event-log", "attach #$attachGeneration")
+        return attachGeneration
+    }
+
+    @Synchronized
+    fun detach(token: Long) {
+        if (token == attachGeneration) handler = null
+        DebugLog.log("event-log", "detach #$token, текущий #$attachGeneration")
     }
 
     /** Долговечный журнал: пишем синхронно (commit), чтобы события пережили гибель процесса/активности. */
