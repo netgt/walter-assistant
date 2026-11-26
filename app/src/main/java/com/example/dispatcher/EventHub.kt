@@ -54,7 +54,7 @@ object EventHub {
         handler?.invoke(e)
     }
 
-    /** Читает долговечный журнал (не очищает): чат сам补缺 недостающее при старте/возврате. */
+    /** Читает долговечный журнал (не очищает): чат сам добавляет недостающее при старте/возврате. */
     fun drain(ctx: Context): List<EventInfo> {
         val prefs = ctx.getSharedPreferences(Prefs.NAME, Context.MODE_PRIVATE)
         val raw = prefs.getString(Prefs.KEY_EVENT_LOG, null) ?: return emptyList()
