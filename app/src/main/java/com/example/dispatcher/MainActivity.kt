@@ -5140,13 +5140,13 @@ private fun ToolsChip(tools: List<String>) {
             Box(
                 Modifier
                     .clip(RoundedCornerShape(6.dp))
-                    .background(DsUserBubble)
+                    .background(DsAccent)
                     .padding(horizontal = 6.dp, vertical = 2.dp)
             ) {
                 Text(
                     t,
                     fontSize = 10.sp,
-                    color = Color(0xFF3B5F9E),
+                    color = Color(0xFF4B5159),
                     fontFamily = Mono
                 )
             }
