@@ -3,14 +3,17 @@ package com.example.dispatcher
 import com.example.dispatcher.BuildConfig
 
 import android.Manifest
+import android.content.ComponentName
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.widget.Toast
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.service.notification.NotificationListenerService
 import android.provider.CalendarContract
 import android.provider.Settings
 import android.util.Log
@@ -361,6 +364,11 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         walterForeground = true
         eventDrainTick.value++
+        if (Build.VERSION.SDK_INT >= 24) {
+            runCatching {
+                NotificationListenerService.requestRebind(ComponentName(this, WatchService::class.java))
+            }
+        }
     }
 
     override fun onPause() {

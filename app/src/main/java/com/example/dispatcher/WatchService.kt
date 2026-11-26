@@ -2,6 +2,9 @@ package com.example.dispatcher
 
 import android.app.Notification
 import android.app.PendingIntent
+import android.content.ComponentName
+import android.content.Intent
+import android.os.Build
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
@@ -45,6 +48,19 @@ class WatchService : NotificationListenerService() {
     }
 
     private val lastSeen = HashMap<String, Long>()
+
+    /** После смахивания из recents просим систему заново связать NLS при следующем запуске. */
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        if (Build.VERSION.SDK_INT >= 24) {
+            runCatching {
+                NotificationListenerService.requestRebind(ComponentName(this, WatchService::class.java))
+                DebugLog.log("watch-service", "onTaskRemoved: запрошен rebind NLS")
+            }.onFailure {
+                DebugLog.log("watch-service", "onTaskRemoved rebind: ${it.message ?: it.javaClass.simpleName}")
+            }
+        }
+    }
 
     private fun alreadyProcessed(sbn: StatusBarNotification, text: String): Boolean {
         val id = sbn.key + "|" + sbn.postTime + "|" + text.hashCode()
@@ -229,6 +245,7 @@ class WatchService : NotificationListenerService() {
         super.onListenerConnected()
         activeIntents.clear()
         val current = activeNotifications.orEmpty().toList()
+        DebugLog.log("watch-service", "onListenerConnected: активных уведомлений=${current.size}")
         for (sbn in current) {
             val n = sbn.notification ?: continue
             val extras = n.extras
