@@ -24,7 +24,8 @@ object EventHub {
         }
         arr.put(toJson(e))
         while (arr.length() > 200) arr.remove(0)
-        prefs.edit().putString(Prefs.KEY_EVENT_LOG, arr.toString()).commit()
+        val committed = prefs.edit().putString(Prefs.KEY_EVENT_LOG, arr.toString()).commit()
+        if (!committed) DebugLog.log("event-log", "не удалось сохранить событие: ${e.kind} ${e.source}")
     }
 
     private fun toJson(e: EventInfo): JSONObject {

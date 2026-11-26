@@ -360,6 +360,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         walterForeground = true
+        eventDrainTick.value++
     }
 
     override fun onPause() {
@@ -379,6 +380,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         DebugLog.log("e2e", "onNewIntent: ${intent.getStringExtra("e2e_b64")?.take(20)}")
         setIntent(intent)
+        eventDrainTick.value++
         val b64 = intent.getStringExtra("e2e_b64")
         if (b64 != null && BuildConfig.DEBUG) {
             intent.removeExtra("e2e_b64")
@@ -400,6 +402,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private val pendingWatch = androidx.compose.runtime.mutableStateOf<String?>(null)
+    private val eventDrainTick = androidx.compose.runtime.mutableStateOf(0)
 
     private val pendingE2e = androidx.compose.runtime.mutableStateOf<String?>(null)
     // Фактическая высота клавиатуры из нативных WindowInsets (не зависит от Compose-инсетов).
@@ -783,18 +786,27 @@ class MainActivity : ComponentActivity() {
                     // activeKey не трогаем: карточки статичны — ни подсветки, ни метки «ветки»
                 }
 
-                // Восстанавливаем пропущенные события из долговечного журнала без дублей.
-                LaunchedEffect(Unit) {
-                    val present = messages.mapNotNull { it.event }.map { eventKey(it) }.toMutableSet()
+                // Восстанавливаем пропущенные события при каждом возврате в чат, без дублей.
+                fun restorePendingEvents() {
+                    val present = messages.flatMap { listOfNotNull(it.event) + it.events }
+                        .map { eventKey(it) }.toMutableSet()
+                    var restored = 0
                     EventHub.drain(ctx).forEach { e ->
                         val k = eventKey(e)
                         if (k !in present) {
                             present += k
                             messages += Msg(false, "", e)
-                            persist()
-                            scrollSignal++
+                            restored++
                         }
                     }
+                    if (restored > 0) {
+                        persist()
+                        scrollSignal++
+                        DebugLog.log("event-log", "восстановлено событий: $restored")
+                    }
+                }
+                LaunchedEffect(eventDrainTick.value) {
+                    restorePendingEvents()
                 }
 
                 // Живые события добавляются карточкой в чат без автораскрытия.
