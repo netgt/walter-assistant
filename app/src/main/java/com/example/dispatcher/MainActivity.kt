@@ -168,7 +168,9 @@ private data class ToolDesc(val id: String, val status: String, val desc: String
 
 /** Единый реестр инструментов: набор, статусы и хелп строятся из одного списка. */
 private val READ_TOOLS = listOf(
-    ToolDesc("read_sms", "Читаю SMS…", "последние SMS: отправитель, текст, время; query — необязательный фильтр по отправителю/тексту"),
+    ToolDesc("read_sms", "Читаю SMS…", "последние SMS: отправитель, текст, время; сначала применяются пользовательские правила finance_learn, затем сырой текст модели; query — необязательный фильтр"),
+    ToolDesc("finance_learn", "Запоминаю правило SMS…", "обучение парсингу банковской SMS на примере пользователя; query JSON: sender, sample, signature и поля amount/balance/category/card/merchant/operation с after/before или фиксированным значением"),
+    ToolDesc("finance_rules", "Показываю правила SMS…", "список пользовательских правил парсинга банковских SMS; query пусто — список, 'delete ID' — удалить правило, 'reset' — удалить все"),
     ToolDesc("read_pushes", "Читаю уведомления…", "последние уведомления: источник, заголовок, текст; query — необязательный фильтр по источнику/тексту, «Walter» — только алерты Walter"),
     ToolDesc("read_apps", "Смотрю установленные приложения…", "список установленных приложений"),
     ToolDesc("open_capability", "Открываю по функции…", "открыть приложение по функции, включая одиночные запросы (галерея, переводы, навигация, счётчик калорий, повтор заказа); deep link/главный экран/уточнение выбирает локальный capability-роутер; NotFound возвращает установленные приложения"),
@@ -2551,7 +2553,9 @@ class MainActivity : ComponentActivity() {
 - alert_edit: изменить оповещение; "query" — JSON {"name":"текущее имя","newName":"новое имя (необязательно)","rule":"..."/"channel":.../"tool":.../"every":...} (только меняемые поля)
 - alert_delete: удалить оповещение ("query" — имя)
 - alert_enable: "query" — "<имя> on|off" — включить/выключить
-- read_sms: последние SMS; "query" — необязательный фильтр по отправителю или тексту (анализ трат и сводки делай сам по этим данным)
+- read_sms: последние SMS; "query" — необязательный фильтр по отправителю или тексту (сначала применяются пользовательские правила finance_learn, затем анализ трат и сводки делай сам по этим данным)
+- finance_learn: обучение парсингу SMS на примере пользователя. Когда пользователь показывает SMS и объясняет поля, сформируй JSON {"sender":"...","sample":"полный текст SMS","signature":"обязательная подстрока формата","amount":{"after":"якорь перед суммой","before":"якорь после суммы"},"balance":{"after":"...","before":"..."},"category":"фиксированная категория","card":{"after":"*","before":"."},"operation":"purchase"}. after/before — подстроки вокруг значения. Вызови finance_learn и по его проверке сообщи, какие поля извлечены; не выдумывай правила для других банков.
+- finance_rules: список пользовательских правил SMS; "query" — пусто для списка, "delete <id>" для удаления, "reset" для удаления всех
 - read_pushes: последние уведомления; "query" — необязательный фильтр по источнику/заголовку/тексту; "Walter" — только собственные алерты Walter (kind=watch). Для переписки с Walter в чате используй search_history, а не read_sms
 - read_apps: список установленных приложений
 - read_files: недавние файлы
@@ -2640,7 +2644,9 @@ $mem
 - alert_edit: изменить оповещение; "query" — JSON {"name":"текущее имя","newName":"новое имя (необязательно)","rule":"..."/"channel":.../"tool":.../"every":...} (только меняемые поля)
 - alert_delete: удалить оповещение ("query" — имя)
 - alert_enable: "query" — "<имя> on|off" — включить/выключить
-- read_sms: последние SMS; "query" — необязательный фильтр по отправителю или тексту (анализ трат и сводки делай сам по этим данным)
+- read_sms: последние SMS; "query" — необязательный фильтр по отправителю или тексту (сначала применяются пользовательские правила finance_learn, затем анализ трат и сводки делай сам по этим данным)
+- finance_learn: обучение парсингу SMS на примере пользователя. Когда пользователь показывает SMS и объясняет поля, сформируй JSON {"sender":"...","sample":"полный текст SMS","signature":"обязательная подстрока формата","amount":{"after":"якорь перед суммой","before":"якорь после суммы"},"balance":{"after":"...","before":"..."},"category":"фиксированная категория","card":{"after":"*","before":"."},"operation":"purchase"}. after/before — подстроки вокруг значения. Вызови finance_learn и по его проверке сообщи, какие поля извлечены; не выдумывай правила для других банков.
+- finance_rules: список пользовательских правил SMS; "query" — пусто для списка, "delete <id>" для удаления, "reset" для удаления всех
 - read_pushes: последние уведомления; "query" — необязательный фильтр по источнику/заголовку/тексту; "Walter" — только собственные алерты Walter (kind=watch). Для переписки с Walter в чате используй search_history, а не read_sms
 - read_apps: список установленных приложений
 - read_files: недавние файлы
@@ -3446,6 +3452,34 @@ $mem
             .map { Triple(it.source, it.text, it.at) }
 
     // ─── Инструменты чтения данных (исполняются локально, результат — модели) ───
+    private fun financeLearnData(query: String): String {
+        val prefs = getSharedPreferences(Prefs.NAME, MODE_PRIVATE)
+        val raw = prefs.getString(Prefs.KEY_FINANCE_RULES, null)
+        val result = FinanceRules.learn(raw, query)
+        val saved = runCatching { JSONObject(result) }.getOrNull() ?: return result
+        if (!saved.optBoolean("saved")) return result
+        prefs.edit().putString(Prefs.KEY_FINANCE_RULES, saved.optString("rules")).apply()
+        return "Правило #${saved.optLong("id")} сохранено. Проверка на sample: ${saved.optString("check")}"
+    }
+
+    private fun financeRulesData(query: String): String {
+        val prefs = getSharedPreferences(Prefs.NAME, MODE_PRIVATE)
+        val raw = prefs.getString(Prefs.KEY_FINANCE_RULES, null)
+        val q = query.trim().lowercase()
+        if (q == "reset") {
+            prefs.edit().remove(Prefs.KEY_FINANCE_RULES).apply()
+            return "Все пользовательские правила SMS удалены."
+        }
+        if (q.startsWith("delete ")) {
+            val id = q.removePrefix("delete ").trim().toLongOrNull()
+                ?: return "Для удаления укажи ID правила: delete <id>."
+            val (message, next) = FinanceRules.delete(raw, id)
+            prefs.edit().putString(Prefs.KEY_FINANCE_RULES, next).apply()
+            return message
+        }
+        return FinanceRules.list(raw)
+    }
+
     private fun readSmsData(query: String, onEvents: (List<EventInfo>) -> Unit): String {
         val allRows = (if (canReadSms()) smsRows(30) else eventSmsRows())
         val rows = EventSort.latest(EventFilter.filterSms(allRows, query), 50) { it.third }
@@ -3453,13 +3487,22 @@ $mem
             return if (query.isBlank()) "SMS не найдено (проверь доступ к SMS-истории: «+» → «Настройки»)."
             else "SMS по фильтру «$query» не найдено."
         }
+        val userRules = FinanceRules.fromJson(
+            getSharedPreferences(Prefs.NAME, MODE_PRIVATE).getString(Prefs.KEY_FINANCE_RULES, null)
+        )
+        fun noteFor(sender: String, body: String): String =
+            FinanceRules.bestMatch(userRules, sender, body)?.structured(body).orEmpty()
         // Модель и карточки получают один фильтрованный набор, свежие события — внизу.
-        onEvents(rows.takeLast(20).map { EventInfo("sms", it.first, "", it.second.take(300), it.third) })
+        onEvents(rows.takeLast(20).map {
+            EventInfo("sms", it.first, "", it.second.take(300), it.third, noteFor(it.first, it.second).ifBlank { null })
+        })
         val df = SimpleDateFormat("dd.MM HH:mm", Locale.getDefault())
         val filterText = if (query.isBlank()) "" else " — фильтр «$query»"
         return "Последние SMS (${rows.size}$filterText):\n" +
             rows.joinToString("\n") {
-                "[${df.format(Date(it.third))}] ${it.first}: ${it.second.take(160).replace("\n", " ")}"
+                val note = noteFor(it.first, it.second)
+                "[${df.format(Date(it.third))}] ${it.first}: ${it.second.take(160).replace("\n", " ")}" +
+                    if (note.isNotBlank()) "\n  ПРАВИЛО: $note" else ""
             }
     }
 
@@ -4349,6 +4392,8 @@ $mem
         onEvents: (List<EventInfo>) -> Unit = {}
     ): String = when (a.action) {
         "read_sms"    -> readSmsData(a.query ?: "", onEvents)
+        "finance_learn" -> financeLearnData(a.query ?: "")
+        "finance_rules" -> financeRulesData(a.query ?: "")
         "read_pushes" -> readPushesData(a.query ?: "", onEvents)
         "read_mail"   -> readMailData(a.query ?: "10", onEvents)
         "read_apps"   -> readAppsData()
