@@ -3650,8 +3650,11 @@ $mem
             ?: return "Для mail_download нужен JSON: accountId, uid, attachment; to — папка назначения."
         val prefs = getSharedPreferences(Prefs.NAME, MODE_PRIVATE)
         val accounts = MailAccounts.fromJson(prefs.getString(Prefs.KEY_MAIL_ACCOUNTS, null))
-        val accountId = o.optLong("accountId", 0L)
-        val account = o.optString("account")
+        val accountIdRaw = o.optString("accountId")
+        val accountId = accountIdRaw.toLongOrNull() ?: 0L
+        val account = o.optString("account").ifBlank {
+            if (accountIdRaw.toLongOrNull() == null) accountIdRaw else ""
+        }
         val acc = accounts.firstOrNull { it.id == accountId || it.user.equals(account, true) }
             ?: accounts.firstOrNull()
             ?: return "Почта не настроена. Сначала выполни «настрой почту»."
@@ -3701,8 +3704,11 @@ $mem
         }
         val prefs = getSharedPreferences(Prefs.NAME, MODE_PRIVATE)
         val accounts = MailAccounts.fromJson(prefs.getString(Prefs.KEY_MAIL_ACCOUNTS, null))
-        val accountId = o.optLong("accountId", 0L)
-        val account = o.optString("account")
+        val accountIdRaw = o.optString("accountId")
+        val accountId = accountIdRaw.toLongOrNull() ?: 0L
+        val account = o.optString("account").ifBlank {
+            if (accountIdRaw.toLongOrNull() == null) accountIdRaw else ""
+        }
         val acc = accounts.firstOrNull { it.id == accountId || it.user.equals(account, true) }
             ?: accounts.firstOrNull()
             ?: return "Почта не настроена. Сначала выполни «настрой почту»."
