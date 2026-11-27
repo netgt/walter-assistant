@@ -93,6 +93,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
@@ -189,7 +190,10 @@ private val READ_TOOLS = listOf(
     ToolDesc("web_search", "Ищу в интернете…", "веб-поиск сразу в двух движках (Яндекс + DuckDuckGo): объединённые заголовки, ссылки и сниппеты по запросу в query"),
     ToolDesc("read_calendar", "Читаю календарь…", "события календарей: системный календарь устройства + несколько Яндекс-календарей по CalDAV; query — сегодня/завтра/неделя/месяц или YYYY-MM-DD..YYYY-MM-DD"),
     ToolDesc("read_mail", "Читаю почту…", "письма из всех настроенных почтовых аккаунтов (IMAP, несколько ящиков); письма показываются карточками с ветками ответов; query — сколько последних писем с каждого"),
+    ToolDesc("mail_download", "Скачиваю вложение…", "скачать вложение письма по UID; query JSON: accountId/account, uid, attachment, to (папка назначения, по умолчанию Download/walter-mail); файл показывается карточкой"),
+    ToolDesc("mail_send", "Отправляю письмо…", "отправка через SMTP с вложениями; query JSON: accountId/account, to, subject, body, attachments, confirmed=true только после ask_confirm и текстового подтверждения пользователя"),
     ToolDesc("fetch_url", "Читаю страницу…", "прямой HTTPS GET произвольной HTTP/HTTPS-страницы по полному URL; без специальных обработчиков сервисов"),
+    ToolDesc("fetch_browser", "Читаю через браузер…", "отдельный WebView с JavaScript для JS-страниц; query — полный HTTP/HTTPS URL; fetch_url остаётся чистым GET"),
     ToolDesc("geocode", "Ищу адрес…", "геокодинг места (Яндекс Геокодер): query — адрес или название места; возвращает координаты и точный адрес"),
     ToolDesc("route_info", "Строю маршрут…", "маршрут между точками (Яндекс Маршрутизация, ПЛАТНЫЙ сервис): from и to — адреса; время и дистанция; бесплатная альтернатива — distance (по прямой)"),
     ToolDesc("reverse_geocode", "Определяю адрес…", "адрес по координатам (обратный геокодинг): query — широта,долгота"),
@@ -360,6 +364,8 @@ class MainActivity : ComponentActivity() {
     /** Наш экран на переднем плане? (для фолбэка «contentIntent не открыл экран») */
     @Volatile var walterForeground = true
         private set
+    private var lastUserText = ""
+    private var lastUserConfirmAt = 0L
 
     override fun onResume() {
         super.onResume()
@@ -1589,6 +1595,7 @@ class MainActivity : ComponentActivity() {
                     DebugLog.log("plan-capture", "enter: $q0")
                     val q = q0.trim()
                     if (q.isEmpty()) return
+                    lastUserText = q
 
                     // Текстовое подтверждение продолжает сохранённый план.
                     val confirmMsg = messages.lastOrNull { (it.askConfirm != null || it.planInput) && it.resumeMsgs != null }
@@ -1596,6 +1603,7 @@ class MainActivity : ComponentActivity() {
                     if (confirmMsg != null) {
                         input = ""
                         lastUser = q
+                        if (PlanFlow.isConfirmation(q)) lastUserConfirmAt = System.currentTimeMillis()
                         resumeConfirm(confirmMsg, q)
                         return
                     }
@@ -2572,8 +2580,11 @@ class MainActivity : ComponentActivity() {
 - форматы для write_file: xlsx — ячейки строки через « | », новый лист начинается строкой "## Имя листа"; pptx — новый слайд начинается строкой "## Слайд N" (далее строки текста слайда); text/docx — обычный текст строками
 - grep_files: поиск текста внутри текстовых файлов (искомый текст — в "query"; папку или конкретный файл можно указать в "path")
 - read_calendar: события календарей — системный календарь устройства + все настроенные Яндекс-календари по CalDAV ("query" — сегодня/завтра/неделя/месяц или YYYY-MM-DD..YYYY-MM-DD)
-- read_mail: письма из всех настроенных почтовых аккаунтов по IMAP ("query" — сколько последних писем с каждого, по умолчанию 10)
+- read_mail: письма из всех настроенных почтовых аккаунтов по IMAP ("query" — сколько последних писем с каждого, по умолчанию 10); с вложениями возвращает UID и имена файлов
+- mail_download: скачать вложение письма; "query" — JSON {"accountId":"id аккаунта","uid":123,"attachment":"имя файла","to":"папка назначения (необязательно)"}
+- mail_send: отправить письмо через SMTP с файлом; "query" — JSON {"accountId":"id аккаунта","to":"адресат","subject":"тема","body":"текст","attachments":["/полный/путь"],"confirmed":true}. Перед отправкой ОБЯЗАТЕЛЬНО сначала вызови ask_confirm с получателем, темой и вложениями; только после текстового «подтверди» пользователя повтори mail_send с confirmed=true
 - fetch_url: прямой HTTPS GET произвольной HTTP/HTTPS-страницы по полному URL в "query"; никаких специальных обработчиков сервисов
+- fetch_browser: отдельный WebView с JavaScript для JS-страниц; "query" — полный HTTP/HTTPS URL; используй только если обычный fetch_url не дал содержимого или страница явно требует JavaScript; fetch_url остаётся чистым GET
 - geocode: координаты и точный адрес места ("query" — адрес; Яндекс Геокодер)
 - reverse_geocode: адрес по координатам ("query" — широта,долгота)
 - distance: расстояние по прямой между адресами ("from" и "to"; бесплатно, без сервиса маршрутизации)
@@ -2663,8 +2674,11 @@ $mem
 - форматы для write_file: xlsx — ячейки строки через « | », новый лист начинается строкой "## Имя листа"; pptx — новый слайд начинается строкой "## Слайд N" (далее строки текста слайда); text/docx — обычный текст строками
 - grep_files: поиск текста внутри текстовых файлов (искомый текст — в "query"; папку или конкретный файл можно указать в "path")
 - read_calendar: события календарей — системный календарь устройства + все настроенные Яндекс-календари по CalDAV ("query" — сегодня/завтра/неделя/месяц или YYYY-MM-DD..YYYY-MM-DD)
-- read_mail: письма из всех настроенных почтовых аккаунтов по IMAP ("query" — сколько последних писем с каждого, по умолчанию 10)
+- read_mail: письма из всех настроенных почтовых аккаунтов по IMAP ("query" — сколько последних писем с каждого, по умолчанию 10); с вложениями возвращает UID и имена файлов
+- mail_download: скачать вложение письма; "query" — JSON {"accountId":"id аккаунта","uid":123,"attachment":"имя файла","to":"папка назначения (необязательно)"}
+- mail_send: отправить письмо через SMTP с файлом; "query" — JSON {"accountId":"id аккаунта","to":"адресат","subject":"тема","body":"текст","attachments":["/полный/путь"],"confirmed":true}. Перед отправкой ОБЯЗАТЕЛЬНО сначала вызови ask_confirm с получателем, темой и вложениями; только после текстового «подтверди» пользователя повтори mail_send с confirmed=true
 - fetch_url: прямой HTTPS GET произвольной HTTP/HTTPS-страницы по полному URL в "query"; никаких специальных обработчиков сервисов
+- fetch_browser: отдельный WebView с JavaScript для JS-страниц; "query" — полный HTTP/HTTPS URL; используй только если обычный fetch_url не дал содержимого или страница явно требует JavaScript; fetch_url остаётся чистым GET
 - geocode: координаты и точный адрес места ("query" — адрес; Яндекс Геокодер)
 - reverse_geocode: адрес по координатам ("query" — широта,долгота)
 - distance: расстояние по прямой между адресами ("from" и "to"; бесплатно, без сервиса маршрутизации)
@@ -3631,6 +3645,87 @@ $mem
         return text
     }
 
+    private suspend fun mailDownloadData(query: String, onFiles: (List<FileRef>) -> Unit): String {
+        val o = runCatching { JSONObject(query) }.getOrNull()
+            ?: return "Для mail_download нужен JSON: accountId, uid, attachment; to — папка назначения."
+        val prefs = getSharedPreferences(Prefs.NAME, MODE_PRIVATE)
+        val accounts = MailAccounts.fromJson(prefs.getString(Prefs.KEY_MAIL_ACCOUNTS, null))
+        val accountId = o.optLong("accountId", 0L)
+        val account = o.optString("account")
+        val acc = accounts.firstOrNull { it.id == accountId || it.user.equals(account, true) }
+            ?: accounts.firstOrNull()
+            ?: return "Почта не настроена. Сначала выполни «настрой почту»."
+        val uid = o.optLong("uid", 0L)
+        if (uid <= 0) return "Укажи UID письма из read_mail."
+        val attachment = o.optString("attachment")
+        val destination = o.optString("to").ifBlank {
+            java.io.File(
+                android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS),
+                "walter-mail"
+            ).absolutePath
+        }
+        return withContext(Dispatchers.IO) {
+            runCatching {
+                MailStore.downloadAttachment(acc.host, acc.port, acc.user, acc.pass, acc.ssl, uid, attachment, destination)
+            }.fold(
+                onSuccess = { path ->
+                    val file = java.io.File(path)
+                    val ext = file.extension.lowercase()
+                    val kind = when (ext) {
+                        "pdf" -> "pdf"
+                        "docx" -> "doc"
+                        "xlsx" -> "sheet"
+                        "pptx" -> "slides"
+                        "png", "jpg", "jpeg", "webp" -> "image"
+                        "apk" -> "apk"
+                        "mp4", "mkv", "webm" -> "video"
+                        else -> "other"
+                    }
+                    onFiles(listOf(FileRef(file.name, file.absolutePath, kind, file.length())))
+                    "Вложение скачано: $path"
+                },
+                onFailure = { e -> "Скачивание не выполнено: ${e.message ?: e.javaClass.simpleName}" }
+            )
+        }
+    }
+
+    private suspend fun mailSendData(query: String): String {
+        val o = runCatching { JSONObject(query) }.getOrNull()
+            ?: return "Для mail_send нужен JSON: to, subject, body, attachments; после ask_confirm добавь confirmed=true."
+        val confirmed = o.optBoolean("confirmed", false)
+        val recentConfirmation = lastUserConfirmAt > 0 &&
+            System.currentTimeMillis() - lastUserConfirmAt < 120_000 &&
+            PlanFlow.isConfirmation(lastUserText)
+        if (!confirmed || !recentConfirmation) {
+            return "Письмо НЕ отправлено. Сначала вызови ask_confirm с темой, получателем и вложениями. После текстового «подтверди» повтори mail_send с confirmed=true."
+        }
+        val prefs = getSharedPreferences(Prefs.NAME, MODE_PRIVATE)
+        val accounts = MailAccounts.fromJson(prefs.getString(Prefs.KEY_MAIL_ACCOUNTS, null))
+        val accountId = o.optLong("accountId", 0L)
+        val account = o.optString("account")
+        val acc = accounts.firstOrNull { it.id == accountId || it.user.equals(account, true) }
+            ?: accounts.firstOrNull()
+            ?: return "Почта не настроена. Сначала выполни «настрой почту»."
+        val to = o.optString("to").trim()
+        if (to.isBlank()) return "Укажи получателя в to."
+        val attachments = o.optJSONArray("attachments")?.let { arr ->
+            (0 until arr.length()).map { arr.optString(it) }.filter { it.isNotBlank() }
+        } ?: emptyList()
+        val smtpHost = o.optString("smtpHost").ifBlank { acc.host.replace("imap.", "smtp.") }
+        val smtpPort = o.optInt("smtpPort", 465)
+        return withContext(Dispatchers.IO) {
+            runCatching {
+                MailStore.send(
+                    smtpHost, smtpPort, acc.user, acc.pass, true,
+                    to, o.optString("subject"), o.optString("body"), attachments
+                )
+            }.fold(
+                onSuccess = { "Письмо отправлено: $to. Тема: ${o.optString("subject")}. Вложений: ${attachments.size}." },
+                onFailure = { e -> "Отправка не выполнена: ${e.message ?: e.javaClass.simpleName}" }
+            )
+        }
+    }
+
     private suspend fun readMailData(q: String, onEvents: (List<EventInfo>) -> Unit): String {
         val prefs = getSharedPreferences(Prefs.NAME, MODE_PRIVATE)
         val accounts = MailAccounts.fromJson(prefs.getString(Prefs.KEY_MAIL_ACCOUNTS, null))
@@ -3641,7 +3736,7 @@ $mem
             // карточки писем в чате: как пуши и SMS — с веткой ответа, без внешнего приложения
             val cardEvents = mutableListOf<EventInfo>()
             val parts = accounts.map { acc ->
-                val res = runCatching { MailStore.fetch(acc.host, acc.port, acc.user, acc.pass, acc.ssl, per) }
+                val res = runCatching { MailStore.fetch(acc.host, acc.port, acc.user, acc.pass, acc.ssl, per, acc.id) }
                 res.fold(
                     onSuccess = { items ->
                         cardEvents += items.map { m ->
@@ -3664,6 +3759,20 @@ $mem
             return "Укажи полный HTTP/HTTPS URL в query."
         }
         return fetchAnyUrl(url)
+    }
+
+    /** Отдельный browser-инструмент: rendered DOM через WebView, не чистый GET. */
+    private suspend fun fetchBrowserData(q: String): String {
+        val url = q.trim()
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            return "Укажи полный HTTP/HTTPS URL в query."
+        }
+        val text = BrowserFetch.text(this, url)
+        return if (text.isBlank()) {
+            "Не удалось получить содержимое $url через WebView (JavaScript/CAPTCHA/сеть)."
+        } else {
+            "Страница $url (WebView):\n$text"
+        }
     }
 
     /** Внутренний канал фоновых оповещений; к действию fetch_url отношения не имеет. */
@@ -3733,7 +3842,13 @@ $mem
             }
             if (attempt < 2) delay(3_000)
         }
-        return "### @$name: не удалось получить (t.me недоступен напрямую — проверь, что VPN подключён, и повтори)."
+        // Если прямой GET дал только JS-shell/пустоту, читаем тот же URL через WebView.
+        val rendered = BrowserFetch.html(this, "https://t.me/s/$name")
+        val posts = TelegramChannels.parse(rendered)
+        if (posts.isNotEmpty()) {
+            return "### @$name (WebView)\n" + TelegramChannels.formatPosts(name, posts)
+        }
+        return "### @$name: не удалось получить ни прямым GET, ни WebView (t.me недоступен или канал приватный/публикует только медиа)."
     }
 
     private fun yandexApiKey(): String = getSharedPreferences(Prefs.NAME, MODE_PRIVATE)
@@ -4397,6 +4512,8 @@ $mem
         "finance_rules" -> financeRulesData(a.query ?: "")
         "read_pushes" -> readPushesData(a.query ?: "", onEvents)
         "read_mail"   -> readMailData(a.query ?: "10", onEvents)
+        "mail_download" -> mailDownloadData(a.query ?: "", onFiles)
+        "mail_send"   -> mailSendData(a.query ?: "")
         "read_apps"   -> readAppsData()
         "open_capability" -> openCapability(a.query ?: "")
         "read_files"  -> readFilesData(onFiles)
@@ -4416,6 +4533,7 @@ $mem
         "web_search" -> webSearchData(a.query ?: "") { st -> onStatus(st) }
         "read_calendar" -> readCalendarData(a.query ?: "неделя", onEvents)
         "fetch_url" -> fetchUrlData(a.query ?: "")
+        "fetch_browser" -> fetchBrowserData(a.query ?: "")
         "geocode" -> geocodeData(a.query ?: "")
         "route_info" -> routeInfoData(a.from ?: "", a.to ?: "", a.query ?: "")
         "reverse_geocode" -> reverseGeocodeData(a.query ?: "")
@@ -5431,6 +5549,77 @@ private fun ToolSettingCard(
 }
 
 @Composable
+private fun TelegramAuthBlock() {
+    val ctx = LocalContext.current
+    val state by TelegramAuth.state.collectAsState()
+    var phone by remember { mutableStateOf("") }
+    var code by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    LaunchedEffect(Unit) { TelegramAuth.refresh(ctx) }
+    Column(Modifier.fillMaxWidth()) {
+        Text("Вход в Telegram через TDLib", fontSize = 13.sp, color = DsText, fontFamily = Mono)
+        Spacer(Modifier.height(4.dp))
+        Text(
+            if (TelegramAuth.isConfigured()) "Номер → код → пароль 2FA. QR пока не используется."
+            else "В этой сборке не заданы Telegram apiId/apiHash. Нужна локальная конфигурация сборки.",
+            fontSize = 11.sp, color = DsHint, fontFamily = Mono, lineHeight = 16.sp
+        )
+        Spacer(Modifier.height(8.dp))
+        when (state.status) {
+            "READY" -> {
+                Text("Telegram подключён", fontSize = 13.sp, color = DsText, fontFamily = Mono)
+                Spacer(Modifier.height(6.dp))
+                RoundIconButton(R.drawable.ic_close, "Выйти из Telegram") {
+                    TelegramAuth.logout()
+                }
+            }
+            "CODE" -> {
+                OutlinedTextField(
+                    value = code, onValueChange = { code = it },
+                    placeholder = { Text("Код из Telegram/SMS") },
+                    modifier = Modifier.fillMaxWidth(), singleLine = true
+                )
+                Spacer(Modifier.height(6.dp))
+                RoundIconButton(R.drawable.ic_check, "Подтвердить код", enabled = code.isNotBlank()) {
+                    TelegramAuth.submitCode(code)
+                }
+            }
+            "PASSWORD" -> {
+                OutlinedTextField(
+                    value = password, onValueChange = { password = it },
+                    placeholder = { Text("Пароль 2FA") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(), singleLine = true
+                )
+                Spacer(Modifier.height(6.dp))
+                RoundIconButton(R.drawable.ic_check, "Подтвердить пароль", enabled = password.isNotBlank()) {
+                    TelegramAuth.submitPassword(password)
+                }
+            }
+            else -> {
+                OutlinedTextField(
+                    value = phone, onValueChange = { phone = it },
+                    placeholder = { Text("+7 900 000-00-00") },
+                    modifier = Modifier.fillMaxWidth(), singleLine = true
+                )
+                Spacer(Modifier.height(6.dp))
+                RoundIconButton(
+                    R.drawable.ic_phone,
+                    if (state.status == "ERROR") "Повторить вход" else "Продолжить",
+                    enabled = TelegramAuth.isConfigured() && phone.isNotBlank()
+                ) {
+                    TelegramAuth.startPhone(ctx, phone)
+                }
+            }
+        }
+        if (state.message.isNotBlank() && state.status != "READY") {
+            Spacer(Modifier.height(6.dp))
+            Text(state.message, fontSize = 11.sp, color = DsHint, fontFamily = Mono, lineHeight = 16.sp)
+        }
+    }
+}
+
+@Composable
 private fun PushVisibilityBlock() {
     val ctx = LocalContext.current
     val owner = LocalLifecycleOwner.current
@@ -5624,6 +5813,8 @@ private fun SettingsScreen(
             LauncherSettingsBlock()
             SectionHeader("Пуши в обычном режиме")
             PushVisibilityBlock()
+            SectionHeader("Telegram")
+            TelegramAuthBlock()
             SectionHeader("Модель")
             Text("API URL", fontSize = 13.sp, color = DsHint)
             Spacer(Modifier.height(4.dp))

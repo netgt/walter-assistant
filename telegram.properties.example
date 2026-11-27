@@ -1,0 +1,4 @@
+# Локальная конфигурация Telegram TDLib. Не коммитить реальные значения.
+# Получить один раз: https://my.telegram.org → API development tools.
+apiId=0
+apiHash=

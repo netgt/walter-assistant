@@ -1,5 +1,9 @@
 import java.util.Properties
 
+val telegramProps = Properties().apply {
+    rootProject.file("telegram.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -33,9 +37,11 @@ android {
         applicationId = "com.example.dispatcher"
         minSdk = 26
         targetSdk = 35
-        versionCode = 268
-        versionName = "1.50.0"
+        versionCode = 269
+        versionName = "1.51.0"
         multiDexEnabled = true
+        buildConfigField("int", "TG_API_ID", telegramProps.getProperty("apiId", "0"))
+        buildConfigField("String", "TG_API_HASH", "\"" + telegramProps.getProperty("apiHash", "").replace("\\", "\\\\").replace("\"", "\\\"") + "\"")
     }
 
     buildTypes {
@@ -98,6 +104,9 @@ dependencies {
     implementation("org.apache.poi:poi-ooxml:5.2.5")
     // PDFBox-порт для Android: обычный PDFBox 3.x тянет java.awt (нет на Android) и падает
     implementation("com.tom-roush:pdfbox-android:2.0.27.0")
+    // TDLib: только вход по телефону; prebuilt native AAR, без локальной сборки NDK
+    implementation("io.github.tdlib-android:core:0.1.3")
+    implementation("io.github.tdlib-android:ktx:0.1.3")
     // почта по IMAP (Яндекс/Gmail)
     implementation("com.sun.mail:android-mail:1.6.7")
     implementation("com.sun.mail:android-activation:1.6.7")

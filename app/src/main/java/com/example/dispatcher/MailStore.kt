@@ -4,11 +4,19 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.Properties
+import javax.mail.Authenticator
+import javax.mail.BodyPart
 import javax.mail.Folder
 import javax.mail.Message
+import javax.mail.PasswordAuthentication
 import javax.mail.Session
+import javax.mail.Transport
+import javax.mail.UIDFolder
 import javax.mail.internet.InternetAddress
+import javax.mail.internet.MimeBodyPart
+import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
+import javax.activation.FileDataSource
 
 /**
  * Почта по IMAP (Яндекс: imap.yandex.ru:993, Gmail: imap.gmail.com:993 с паролем приложения).
@@ -16,15 +24,21 @@ import javax.mail.internet.MimeMultipart
  */
 object MailStore {
 
+    data class AttachmentInfo(val name: String, val mime: String, val size: Int)
+
     data class MailItem(
         val from: String,
         val subject: String,
         val date: String,
         val body: String,
-        val at: Long = 0L
+        val at: Long = 0L,
+        val uid: Long = 0L,
+        val folder: String = "INBOX",
+        val accountId: Long = 0L,
+        val attachments: List<AttachmentInfo> = emptyList()
     )
 
-    fun fetch(host: String, port: Int, user: String, pass: String, ssl: Boolean, count: Int): List<MailItem> {
+    fun fetch(host: String, port: Int, user: String, pass: String, ssl: Boolean, count: Int, accountId: Long = 0L): List<MailItem> {
         val protocol = if (ssl) "imaps" else "imap"
         val props = Properties().apply {
             put("mail.store.protocol", protocol)
@@ -45,6 +59,7 @@ object MailStore {
             store.connect(host, port, user, pass)
             val inbox = store.getFolder("INBOX")
             inbox.open(Folder.READ_ONLY)
+            val uidFolder = inbox as? UIDFolder
             val out = mutableListOf<MailItem>()
             val total = inbox.messageCount
             val from = maxOf(1, total - count + 1)
@@ -57,7 +72,11 @@ object MailStore {
                     subject = m.subject ?: "",
                     date = formatDate(m.receivedDate ?: m.sentDate),
                     body = extractBody(m),
-                    at = (m.receivedDate ?: m.sentDate)?.time ?: 0L
+                    at = (m.receivedDate ?: m.sentDate)?.time ?: 0L,
+                    uid = uidFolder?.getUID(m) ?: 0L,
+                    folder = inbox.name,
+                    accountId = accountId,
+                    attachments = attachmentInfo(m)
                 )
             }
             inbox.close(false)
@@ -152,6 +171,119 @@ object MailStore {
             .trim()
     }
 
+    internal fun attachmentInfo(message: Message): List<AttachmentInfo> {
+        val out = mutableListOf<AttachmentInfo>()
+        fun walk(part: BodyPart) {
+            val name = runCatching { part.fileName }.getOrNull().orEmpty()
+            if (name.isNotBlank()) {
+                out += AttachmentInfo(name, part.contentType ?: "application/octet-stream", runCatching { part.size }.getOrDefault(-1))
+            }
+            val content = runCatching { part.content }.getOrNull()
+            if (content is MimeMultipart) {
+                for (i in 0 until content.count) runCatching { content.getBodyPart(i) }.getOrNull()?.let(::walk)
+            }
+        }
+        runCatching {
+            when (val content = message.content) {
+                is MimeMultipart -> for (i in 0 until content.count) walk(content.getBodyPart(i))
+                else -> Unit
+            }
+        }
+        return out
+    }
+
+    private fun connect(host: String, port: Int, user: String, pass: String, ssl: Boolean) = run {
+        val protocol = if (ssl) "imaps" else "imap"
+        val props = Properties().apply {
+            put("mail.store.protocol", protocol)
+            put("mail.$protocol.host", host)
+            put("mail.$protocol.port", port.toString())
+            if (ssl) put("mail.imaps.ssl.enable", "true") else put("mail.imap.starttls.enable", "true")
+            put("mail.$protocol.connectiontimeout", "15000")
+            put("mail.$protocol.timeout", "20000")
+        }
+        val store = Session.getInstance(props, null).getStore(protocol)
+        store.connect(host, port, user, pass)
+        store
+    }
+
+    fun downloadAttachment(
+        host: String, port: Int, user: String, pass: String, ssl: Boolean,
+        uid: Long, requestedName: String, destinationDir: String
+    ): String {
+        val store = connect(host, port, user, pass, ssl)
+        return try {
+            val folder = store.getFolder("INBOX")
+            folder.open(Folder.READ_ONLY)
+            val uidFolder = folder as UIDFolder
+            val message = uidFolder.getMessageByUID(uid)
+                ?: throw IllegalArgumentException("Письмо с UID $uid не найдено")
+            fun find(part: BodyPart): BodyPart? {
+                val name = runCatching { part.fileName }.getOrNull().orEmpty()
+                if (name.isNotBlank() && (requestedName.isBlank() || name == requestedName)) return part
+                val content = runCatching { part.content }.getOrNull()
+                if (content is MimeMultipart) {
+                    for (i in 0 until content.count) {
+                        runCatching { content.getBodyPart(i) }.getOrNull()?.let(::find)?.let { return it }
+                    }
+                }
+                return null
+            }
+            var found: BodyPart? = null
+            when (val content = message.content) {
+                is MimeMultipart -> for (i in 0 until content.count) {
+                    found = find(content.getBodyPart(i))
+                    if (found != null) break
+                }
+            }
+            val part = found ?: throw IllegalArgumentException("Вложение «$requestedName» не найдено")
+            val name = part.fileName?.substringAfterLast('/')?.substringAfterLast('\\')?.takeIf { it.isNotBlank() }
+                ?: "attachment.bin"
+            val dir = java.io.File(destinationDir).apply { mkdirs() }
+            val out = java.io.File(dir, name)
+            part.inputStream.use { input ->
+                out.outputStream().use { output -> input.copyTo(output) }
+            }
+            out.absolutePath
+        } finally {
+            runCatching { store.close() }
+        }
+    }
+
+    fun send(
+        host: String, port: Int, user: String, pass: String, ssl: Boolean,
+        to: String, subject: String, body: String, attachments: List<String>
+    ) {
+        val props = Properties().apply {
+            put("mail.smtp.host", host)
+            put("mail.smtp.port", port.toString())
+            put("mail.smtp.auth", "true")
+            put("mail.smtp.connectiontimeout", "15000")
+            put("mail.smtp.timeout", "20000")
+            if (ssl) put("mail.smtp.ssl.enable", "true") else put("mail.smtp.starttls.enable", "true")
+        }
+        val session = Session.getInstance(props, object : Authenticator() {
+            override fun getPasswordAuthentication(): PasswordAuthentication = PasswordAuthentication(user, pass)
+        })
+        val message = MimeMessage(session).apply {
+            setFrom(InternetAddress(user))
+            setRecipients(Message.RecipientType.TO, InternetAddress.parse(to))
+            setSubject(subject, Charsets.UTF_8.name())
+        }
+        val multipart = MimeMultipart("mixed")
+        multipart.addBodyPart(MimeBodyPart().apply { setText(body, Charsets.UTF_8.name()) })
+        attachments.forEach { path ->
+            val file = java.io.File(path)
+            if (!file.isFile) throw IllegalArgumentException("Файл не найден: $path")
+            multipart.addBodyPart(MimeBodyPart().apply {
+                dataHandler = javax.activation.DataHandler(FileDataSource(file))
+                fileName = file.name
+            })
+        }
+        message.setContent(multipart)
+        Transport.send(message)
+    }
+
     private fun formatDate(d: Date?): String = d?.let {
         SimpleDateFormat("dd.MM HH:mm", Locale.getDefault()).format(it)
     } ?: ""
@@ -164,6 +296,11 @@ object MailStore {
                 if (m.subject.isNotBlank()) append("Тема: ").append(m.subject).append("\n")
                 if (m.date.isNotBlank()) append("Дата: ").append(m.date).append("\n")
                 if (m.body.isNotBlank()) append(m.body)
+                if (m.uid > 0) append("\nUID: ").append(m.uid)
+                if (m.attachments.isNotEmpty()) {
+                    append("\nВложения: ")
+                    append(m.attachments.joinToString(", ") { it.name })
+                }
             }.trim()
         }
     }
