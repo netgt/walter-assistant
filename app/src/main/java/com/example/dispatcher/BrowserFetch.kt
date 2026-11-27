@@ -12,11 +12,11 @@ import org.json.JSONArray
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 
-/** Отдельный browser-канал: WebView с JavaScript, без изменения чистого fetch_url. */
+/** Универсальный WebView-канал: JS и догрузка по высоте страницы, без сайт-специфики. */
 object BrowserFetch {
-    private data class ScrollState(var attempts: Int = 0, var streak: Int = 0, var lastCount: Int = 0)
+    private data class ScrollState(var attempts: Int = 0, var streak: Int = 0, var lastHeight: Int = 0)
 
-    suspend fun html(ctx: Context, url: String, waitMs: Long = 2500, timeoutMs: Long = 30_000, targetCount: Int = 0): String =
+    suspend fun html(ctx: Context, url: String, waitMs: Long = 2500, timeoutMs: Long = 30_000): String =
         withContext(Dispatchers.Main) {
             suspendCancellableCoroutine { cont ->
                 val handler = Handler(Looper.getMainLooper())
@@ -25,7 +25,7 @@ object BrowserFetch {
                 webView.settings.javaScriptEnabled = true
                 webView.settings.domStorageEnabled = true
                 webView.settings.javaScriptCanOpenWindowsAutomatically = false
-                val scrollState = if (targetCount > 0) ScrollState() else null
+                val scrollState = ScrollState()
 
                 fun finish(value: String) {
                     if (!done.compareAndSet(false, true)) return
@@ -43,14 +43,14 @@ object BrowserFetch {
 
                 fun scrollStep(view: WebView, state: ScrollState) {
                     if (done.get()) return
-                    view.evaluateJavascript("document.querySelectorAll('.tgme_widget_message').length") { rawCount ->
-                        val count = rawCount?.toIntOrNull() ?: 0
-                        DebugLog.log("browser", "scroll count=$count attempts=${state.attempts} streak=${state.streak}")
-                        if (count >= targetCount || state.attempts >= 12 || state.streak >= 3) {
+                    view.evaluateJavascript("document.body.scrollHeight") { rawHeight ->
+                        val height = rawHeight?.toIntOrNull() ?: 0
+                        DebugLog.log("browser", "scrollHeight=$height attempts=${state.attempts} streak=${state.streak}")
+                        if (state.attempts >= 2 || state.streak >= 3) {
                             dump(view)
                         } else {
-                            if (count > state.lastCount) {
-                                state.lastCount = count
+                            if (height > state.lastHeight) {
+                                state.lastHeight = height
                                 state.streak = 0
                             } else {
                                 state.streak++
@@ -68,8 +68,7 @@ object BrowserFetch {
                     override fun onPageFinished(view: WebView, url: String?) {
                         handler.postDelayed({
                             if (done.get()) return@postDelayed
-                            val state = scrollState
-                            if (state == null) dump(view) else scrollStep(view, state)
+                            scrollStep(view, scrollState)
                         }, waitMs)
                     }
                 }
@@ -81,10 +80,10 @@ object BrowserFetch {
             }
         }
 
-    suspend fun text(ctx: Context, url: String, targetCount: Int = 0): String {
-        val rendered = html(ctx, url, targetCount = targetCount)
+    suspend fun text(ctx: Context, url: String): String {
+        val rendered = html(ctx, url)
         if (rendered.isBlank()) return ""
-        return WebSearch.htmlToText(rendered).take(if (url.contains("t.me/s/")) 100000 else 24000)
+        return WebSearch.htmlToText(rendered).take(100000)
     }
 
     private fun decodeJs(raw: String?): String {
