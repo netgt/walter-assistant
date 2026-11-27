@@ -77,6 +77,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -5430,6 +5431,92 @@ private fun ToolSettingCard(
 }
 
 @Composable
+private fun PushVisibilityBlock() {
+    val ctx = LocalContext.current
+    val owner = LocalLifecycleOwner.current
+    val prefs = ctx.getSharedPreferences(Prefs.NAME, android.content.Context.MODE_PRIVATE)
+    var enabled by remember { mutableStateOf(prefs.getBoolean(Prefs.KEY_PUSH_FILTER_ENABLED, false)) }
+    var allowed by remember { mutableStateOf(PushVisibility.allowedFromJson(prefs.getString(Prefs.KEY_PUSH_ALLOWED_PACKAGES, null))) }
+    var isHome by remember { mutableStateOf(LauncherMode.isDefaultHome(ctx)) }
+    var showApps by remember { mutableStateOf(false) }
+    var query by remember { mutableStateOf("") }
+    val apps = remember {
+        ctx.packageManager.queryIntentActivities(
+            Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER), 0
+        ).mapNotNull { ri ->
+            val info = ri.activityInfo ?: return@mapNotNull null
+            val label = runCatching { ri.loadLabel(ctx.packageManager).toString() }.getOrDefault(info.packageName)
+            label to info.packageName
+        }.distinctBy { it.second }.sortedBy { it.first.lowercase() }
+    }
+    DisposableEffect(owner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) isHome = LauncherMode.isDefaultHome(ctx)
+        }
+        owner.lifecycle.addObserver(observer)
+        onDispose { owner.lifecycle.removeObserver(observer) }
+    }
+    fun setAllowed(pkg: String, checked: Boolean) {
+        allowed = if (checked) allowed + pkg else allowed - pkg
+        prefs.edit().putString(Prefs.KEY_PUSH_ALLOWED_PACKAGES, PushVisibility.allowedToJson(allowed)).apply()
+    }
+    Column(Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "Скрывать пуши невыбранных приложений",
+                modifier = Modifier.weight(1f), fontSize = 13.sp, color = DsText, fontFamily = Mono
+            )
+            Switch(checked = enabled, onCheckedChange = {
+                enabled = it
+                prefs.edit().putBoolean(Prefs.KEY_PUSH_FILTER_ENABLED, it).apply()
+            })
+        }
+        Spacer(Modifier.height(4.dp))
+        Text(
+            if (isHome)
+                "Walter — лончер: скрываются все обычные пуши, выбор не действует. Долгие пуши не трогаются."
+            else
+                "Обычный режим: выбранные остаются в шторке, невыбранные скрываются. Все события сохраняются в чат.",
+            fontSize = 11.sp, color = DsHint, fontFamily = Mono, lineHeight = 16.sp
+        )
+        Spacer(Modifier.height(8.dp))
+        RoundIconButton(R.drawable.ic_actions, if (showApps) "Скрыть список" else "Выбрать приложения") {
+            showApps = !showApps
+        }
+        if (showApps) {
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                placeholder = { Text("Поиск приложения") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            Spacer(Modifier.height(4.dp))
+            Text("Выбрано: ${allowed.size}", fontSize = 11.sp, color = DsHint, fontFamily = Mono)
+            val filtered = apps.filter {
+                query.isBlank() || it.first.contains(query, true) || it.second.contains(query, true)
+            }
+            LazyColumn(Modifier.fillMaxWidth().heightIn(max = 420.dp)) {
+                itemsIndexed(filtered) { _, item ->
+                    val (label, pkg) = item
+                    Row(
+                        Modifier.fillMaxWidth().clickable { setAllowed(pkg, pkg !in allowed) },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(checked = pkg in allowed, onCheckedChange = { setAllowed(pkg, it) })
+                        Column(Modifier.padding(vertical = 6.dp)) {
+                            Text(label, fontSize = 13.sp, color = DsText, fontFamily = Mono)
+                            Text(pkg, fontSize = 10.sp, color = DsHint, fontFamily = Mono)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun LauncherSettingsBlock() {
     val ctx = LocalContext.current
     val owner = LocalLifecycleOwner.current
@@ -5535,6 +5622,8 @@ private fun SettingsScreen(
         ) {
             SectionHeader("Лончер")
             LauncherSettingsBlock()
+            SectionHeader("Пуши в обычном режиме")
+            PushVisibilityBlock()
             SectionHeader("Модель")
             Text("API URL", fontSize = 13.sp, color = DsHint)
             Spacer(Modifier.height(4.dp))

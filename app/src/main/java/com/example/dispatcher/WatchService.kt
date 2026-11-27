@@ -111,8 +111,19 @@ class WatchService : NotificationListenerService() {
 
         val flags = n.flags
         val isGroupSummary = flags and android.app.Notification.FLAG_GROUP_SUMMARY != 0
-        val ongoing = flags and android.app.Notification.FLAG_ONGOING_EVENT != 0
-        val suppressSystem = LauncherMode.isDefaultHome(this)
+        val ongoing = sbn.isOngoing || flags and android.app.Notification.FLAG_ONGOING_EVENT != 0
+        val effectiveFlags = if (ongoing) flags or Notification.FLAG_ONGOING_EVENT else flags
+        val isHome = LauncherMode.isDefaultHome(this)
+        val pushPrefs = getSharedPreferences(Prefs.NAME, MODE_PRIVATE)
+        val suppressSystem = PushVisibility.shouldSuppress(
+            isHome = isHome,
+            settingEnabled = pushPrefs.getBoolean(Prefs.KEY_PUSH_FILTER_ENABLED, false),
+            allowedPackages = PushVisibility.allowedFromJson(
+                pushPrefs.getString(Prefs.KEY_PUSH_ALLOWED_PACKAGES, null)
+            ),
+            packageName = sbn.packageName,
+            flags = effectiveFlags
+        )
 
         val extras = n.extras
         val title = PushFilter.pushTitle(
@@ -143,7 +154,7 @@ class WatchService : NotificationListenerService() {
             Log.d("Dispatcher", "Push skipped (filter): $title | ${text.take(60)}")
             if (suppressSystem && !ongoing) {
                 runCatching { cancelNotification(sbn.key) }
-                DebugLog.log("launcher-mode", "скрыто отфильтрованное уведомление: ${sbn.packageName}")
+                DebugLog.log("push-visibility", "скрыто отфильтрованное уведомление: ${sbn.packageName}, home=$isHome")
             }
             return
         }
@@ -209,7 +220,7 @@ class WatchService : NotificationListenerService() {
         }
         if (suppressSystem && !ongoing) {
             runCatching { cancelNotification(sbn.key) }
-            DebugLog.log("launcher-mode", "скрыто системное уведомление после сохранения в чат: $appLabel")
+            DebugLog.log("push-visibility", "скрыто системное уведомление после сохранения в чат: $appLabel, home=$isHome")
         }
     }
 

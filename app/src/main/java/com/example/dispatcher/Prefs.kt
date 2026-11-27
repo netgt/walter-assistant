@@ -42,6 +42,8 @@ object Prefs {
     const val KEY_PUSH_IDS = "processed_push_ids"
     const val KEY_EVENT_LOG = "event_log"
     const val KEY_FINANCE_RULES = "finance_rules"
+    const val KEY_PUSH_FILTER_ENABLED = "push_filter_enabled"
+    const val KEY_PUSH_ALLOWED_PACKAGES = "push_allowed_packages"
     const val KEY_DISK_TOKEN = "disk_token"
     const val KEY_DISK_ACCOUNTS = "disk_accounts"
 }
