@@ -12,7 +12,7 @@ object TelegramChannels {
 
     data class Post(val text: String, val date: String)
 
-    fun parse(html: String): List<Post> {
+    fun parse(html: String, limit: Int = 100): List<Post> {
         val out = mutableListOf<Post>()
         val textRe = Regex(
             """<div class="tgme_widget_message_text[^"]*"[^>]*>(.*?)</div>""",
@@ -20,7 +20,7 @@ object TelegramChannels {
         )
         val timeRe = Regex("""<time datetime="([^"]+)""")
         var searchFrom = 0
-        while (out.size < 30) {
+        while (out.size < limit) {
             val tm = textRe.find(html, searchFrom) ?: break
             searchFrom = tm.range.last + 1
             val clean = cleanHtml(tm.groupValues[1])

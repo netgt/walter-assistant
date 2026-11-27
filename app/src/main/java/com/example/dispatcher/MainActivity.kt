@@ -3121,6 +3121,7 @@ $mem
                 val data = when {
                     action.action in setOf("read_file", "disk_read", "read_system_prompt", "search_history") -> raw.take(24000)
                     action.action in setOf("disk_list", "disk_files") -> raw.take(12000)
+                    action.action == "fetch_browser" -> raw.take(100000)
                     else -> raw.take(6000)
                 }
                 DebugLog.log("tool", "${action.action} -> ${data.take(120)}")
@@ -3773,7 +3774,7 @@ $mem
         if (!url.startsWith("http://") && !url.startsWith("https://")) {
             return "Укажи полный HTTP/HTTPS URL в query."
         }
-        val text = BrowserFetch.text(this, url)
+        val text = BrowserFetch.text(this, url, targetCount = if (url.contains("t.me/s/")) 50 else 0)
         return if (text.isBlank()) {
             "Не удалось получить содержимое $url через WebView (JavaScript/CAPTCHA/сеть)."
         } else {
@@ -3849,7 +3850,7 @@ $mem
             if (attempt < 2) delay(3_000)
         }
         // Если прямой GET дал только JS-shell/пустоту, читаем тот же URL через WebView.
-        val rendered = BrowserFetch.html(this, "https://t.me/s/$name")
+        val rendered = BrowserFetch.html(this, "https://t.me/s/$name", targetCount = 50)
         val posts = TelegramChannels.parse(rendered)
         if (posts.isNotEmpty()) {
             return "### @$name (WebView)\n" + TelegramChannels.formatPosts(name, posts)
