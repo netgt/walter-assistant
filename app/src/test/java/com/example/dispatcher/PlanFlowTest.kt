@@ -7,7 +7,7 @@ import org.junit.Test
 
 class PlanFlowTest {
 
-    private val plan = "открой openvpn -> подтверди -> собери новости fetch_url из каналов: https://t.me/markettwits, " +
+    private val plan = "открой openvpn -> подтверди -> собери новости fetch_url из каналов: https://example.com/news, " +
         "сагрегируй по тематикам и напиши сводку -> подтверди -> открой openvpn"
 
     @Test
@@ -29,7 +29,7 @@ class PlanFlowTest {
 
     @Test
     fun nextStepIsSegmentUntilNextConfirm() {
-        assertEquals("собери новости fetch_url из каналов: https://t.me/markettwits, " +
+        assertEquals("собери новости fetch_url из каналов: https://example.com/news, " +
             "сагрегируй по тематикам и напиши сводку",
             PlanFlow.nextStep(plan, 1))
         assertEquals("открой openvpn", PlanFlow.nextStep(plan, 2))

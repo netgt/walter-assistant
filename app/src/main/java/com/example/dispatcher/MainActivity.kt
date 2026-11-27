@@ -497,8 +497,6 @@ class MainActivity : ComponentActivity() {
                 var locationGranted by remember { mutableStateOf(false) }
                 // календари: системный (разрешение) + несколько Яндекс-аккаунтов по CalDAV
                 var caldavAccounts by remember { mutableStateOf(CalDavAccounts.fromJson(prefs.getString(Prefs.KEY_CALDAV_ACCOUNTS, null))) }
-                // Каналы Telegram хранятся отдельно в настройках инструмента.
-                var tgChannels by remember { mutableStateOf(TelegramChannels.channelsFromJson(prefs.getString(Prefs.KEY_TG_CHANNELS, null))) }
                 // Яндекс Диск: WebDAV-аккаунты (логин + пароль приложения) + OAuth-токен для публичных ссылок
                 var diskAccounts by remember { mutableStateOf(DiskAccounts.fromJson(prefs.getString(Prefs.KEY_DISK_ACCOUNTS, null))) }
                 var diskToken by remember { mutableStateOf(prefs.getString(Prefs.KEY_DISK_TOKEN, "") ?: "") }
@@ -761,7 +759,6 @@ class MainActivity : ComponentActivity() {
                         val tools = s.tools
                         val data = when {
                             tools.contains("read_mail") -> "ПОЧТА:\n" + readMailData("5") { }
-                            tools.contains("fetch_url") -> "TELEGRAM-КАНАЛЫ:\n" + readTelegramChannelsData("")
                             tools.contains("read_calendar") -> "КАЛЕНДАРЬ:\n" + readCalendarData("неделя") { }
                             else -> continue
                         }
@@ -895,11 +892,6 @@ class MainActivity : ComponentActivity() {
                         "oauth" -> {
                             diskToken = v
                             prefs.edit().putString(Prefs.KEY_DISK_TOKEN, v).apply()
-                        }
-                        "tg.channels" -> {
-                            val channels = TelegramChannels.parseChannelsInput(value)
-                            tgChannels = channels
-                            prefs.edit().putString(Prefs.KEY_TG_CHANNELS, TelegramChannels.channelsToJson(channels)).apply()
                         }
                     }
                     // редактирование данных аккаунта: ключи mail.N.* / caldav.N.* / disk.N.*
@@ -2010,8 +2002,7 @@ class MainActivity : ComponentActivity() {
                             MailAccounts.fromJson(prefs.getString(Prefs.KEY_MAIL_ACCOUNTS, null)),
                             CalDavAccounts.fromJson(prefs.getString(Prefs.KEY_CALDAV_ACCOUNTS, null)),
                             DiskAccounts.fromJson(prefs.getString(Prefs.KEY_DISK_ACCOUNTS, null)),
-                            prefs.getString(Prefs.KEY_DISK_TOKEN, "") ?: "",
-                            tgChannels.joinToString("\n") { "@$it" }
+                            prefs.getString(Prefs.KEY_DISK_TOKEN, "") ?: ""
                         )
                     }
                 )
@@ -3782,26 +3773,6 @@ $mem
         }
     }
 
-    /** Внутренний канал фоновых оповещений; к действию fetch_url отношения не имеет. */
-    private suspend fun readTelegramChannelsData(q: String): String {
-        val prefs = getSharedPreferences(Prefs.NAME, MODE_PRIVATE)
-        val qt = q.trim()
-        val saved = TelegramChannels.channelsFromJson(prefs.getString(Prefs.KEY_TG_CHANNELS, null))
-        val targets: List<String> = if (qt.isBlank()) {
-            if (saved.isEmpty()) return "Каналов нет: добавь их в настройках оповещения или укажи @имя в правиле."
-            saved.map { TelegramChannels.normalizeChannel(it) }.distinct().take(10)
-        } else {
-            listOf(TelegramChannels.normalizeChannel(qt))
-        }
-        val parts = mutableListOf<String>()
-        targets.forEachIndexed { i, name ->
-            parts += fetchChannel(name)
-            if (i != targets.lastIndex) delay(120)
-        }
-        return if (targets.size > 1) {
-            "Сводка по каналам (${targets.size}):\n\n" + parts.joinToString("\n\n")
-        } else parts.firstOrNull() ?: ""
-    }
 
     /** Один GET с таймаутом; null — таймаут/ошибка сети. */
     private suspend fun plainGet(url: String, timeoutMs: Long = 25_000): String? = withTimeoutOrNull(timeoutMs) {
@@ -3838,25 +3809,6 @@ $mem
         return "Не удалось прочитать страницу $url (прямой доступ недоступен — проверь VPN/сеть)."
     }
 
-    /** Канал: прямой GET t.me (VPN на стороне пользователя) с повторами — VPN мог ещё подключаться. */
-    private suspend fun fetchChannel(name: String): String {
-        repeat(3) { attempt ->
-            plainGet("https://t.me/s/$name", 45_000)?.let { html ->
-                val posts = TelegramChannels.parse(html)
-                if (posts.isNotEmpty()) {
-                    return "### @$name\n" + TelegramChannels.formatPosts(name, posts)
-                }
-            }
-            if (attempt < 2) delay(3_000)
-        }
-        // Если прямой GET дал только JS-shell/пустоту, читаем тот же URL через WebView.
-        val rendered = BrowserFetch.html(this, "https://t.me/s/$name")
-        val posts = TelegramChannels.parse(rendered)
-        if (posts.isNotEmpty()) {
-            return "### @$name (WebView)\n" + TelegramChannels.formatPosts(name, posts)
-        }
-        return "### @$name: не удалось получить ни прямым GET, ни WebView (t.me недоступен или канал приватный/публикует только медиа)."
-    }
 
     private fun yandexApiKey(): String = getSharedPreferences(Prefs.NAME, MODE_PRIVATE)
         .getString(Prefs.KEY_YANDEX_KEY, "") ?: ""
@@ -5534,7 +5486,7 @@ private fun ToolSettingCard(
                         singleLine = true
                     )
                     Spacer(Modifier.height(8.dp))
-                    Text("CORS-прокси (для t.me)", fontSize = 11.sp, color = DsHint)
+                    Text("CORS-прокси (веб)", fontSize = 11.sp, color = DsHint)
                     Spacer(Modifier.height(4.dp))
                     OutlinedTextField(
                         value = corsUrl,

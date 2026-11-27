@@ -151,7 +151,7 @@ Walter вызовет `finance_learn` и сохранит правило с як
 
 `fetch_browser` несколько раз прокручивает страницу вверх, пока её `scrollHeight` не перестанет расти — это универсальная догрузка для любых сайтов с бесконечной лентой. Специальных URL-условий и селекторов для Telegram/t.me в `fetch_url` и `fetch_browser` нет.
 
-Telegram-каналы обрабатываются отдельным `fetchChannel` и парсером `TelegramChannels`; при необходимости они используют тот же универсальный WebView. Headless Chromium для этого не требуется.
+Отдельного Telegram-скрейпера (`fetchChannel`/`TelegramChannels`) больше нет: чтение `t.me/s/<канал>` выполняется тем же универсальным `fetch_browser`, когда URL передаёт пользователь или модель. Headless Chromium для этого не требуется. Полноценный Telegram — через TDLib.
 
 ## 14. Telegram TDLib: вход по телефону
 
