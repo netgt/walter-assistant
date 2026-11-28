@@ -213,3 +213,155 @@ for (activity in pi.activities) {
 4. `PackageDiscovery` (receiver + скан + извлечение filters) + discovered-каталог + слияние.
 5. Очередь верификации на устройстве + UI новых действий в настройках.
 6. AppFunctions-адаптер (по мере доступности API).
+
+---
+
+## 5. Полное покрытие всех 103 приложений
+
+Ниже — все launcher-пакеты из `APP-ACTIONS.md`. «Глубокие» — параметризованные действия из открытых данных (нужна проверка на устройстве). «Root» — только открытие приложения/главного экрана, публичных глубоких ссылок нет. irreversible — только чекпоинт.
+
+### 5.1 Соцсети, мессенджеры, видео
+
+| Приложение | Пакет | Глубокие действия | Риск |
+|---|---|---|---|
+| Telegram | org.telegram.messenger | `tg://resolve?domain={u}&post={id}&text={t}`, `tg://join?invite={h}` (отправка — TDLib) | OPEN/CONFIRM |
+| MAX | ru.oneme.app | `https://max.ru/{name}`, бот `https://max.ru/{bot}?start={payload}` ([MAX](https://dev.max.ru/help/deeplinks)) | OPEN/CONFIRM |
+| Tumblr | com.tumblr | `tumblr://x-callback-url/blog?blogName={b}&postID={id}`, `…/tag?tag={t}` ([Tumblr](https://github.com/TumblrArchive/TumblrLaunchSample)) | OPEN |
+| VK Видео | com.vk.vkvideo | `https://vk.com/video-{oid}_{id}` (app links) | OPEN |
+| Loop | ru.loop.app | root | OPEN |
+| Meshtastic | com.geeksville.mesh | `https://meshtastic.org/e/#{base64ChannelSet}` (шаринг канала) ([wiki](https://wiki.meshamerica.com/books/meshtastic/page/sharing-channels-via-qr-code)) | CONFIRM |
+| YouTube | com.google.android.youtube | `vnd.youtube:{id}`, `https://www.youtube.com/results?search_query={q}` | OPEN |
+| Яндекс Музыка | ru.yandex.music | `https://music.yandex.ru/album/{a}/track/{t}`, `…/search?text={q}` | OPEN |
+| Music (vivo) | com.android.bbkmusic | root (`vivomusic://`) | OPEN |
+| Video (vivo) | com.android.VideoPlayer | `rtsp://{url}` (поток) | OPEN |
+
+### 5.2 Карты, навигация, такси
+
+| Приложение | Пакет | Глубокие действия | Риск |
+|---|---|---|---|
+| Яндекс Карты | ru.yandex.yandexmaps | `?text={q}`, `?ll={lon},{lat}&z={z}`, `?pt=`, `?rtext=…&rtt=auto` ([Яндекс](https://www.yandex.ru/dev/yandex-apps-launch-maps/doc/ru)) | OPEN |
+| Карты Google | com.google.android.apps.maps | `google.navigation://?q={lat},{lon}&mode=d`, `geo:` | OPEN |
+| Яндекс Go | ru.yandex.taxi | `https://taxi.yandex.ru/…?gfrom=…&gto=…&tariff=…` ([Яндекс Go](https://www.yandex.ru/support/taxi-distr/ru/api/deeplinks)) | CONFIRM |
+| Браузер (vivo) | com.vivo.browser | `geo.action://`, открытие URL | OPEN |
+
+### 5.3 Магазины и товары
+
+| Приложение | Пакет | Глубокие действия | Риск |
+|---|---|---|---|
+| OZON | ru.ozon.app.android | `https://www.ozon.ru/product/{sku}`, `…/search/?text={q}` ([OZON](https://dev.ozon.ru/community/937-Poluchenie-ssylki-na-tovar)) | OPEN |
+| Авито | com.avito.android | `https://www.avito.ru/all?q={q}`, `https://www.avito.ru/{path}/{id}` (root FAIL, app links) | OPEN |
+| ВкусВилл | ru.vkusvill | root (`vkusvill://`); глубокие — нужна проверка | OPEN |
+| Google Play | com.android.vending | `market://details?id={pkg}`, `market://search?q={q}` ([Android](https://developer.android.com/guide/play-core)) | OPEN |
+| RuStore | ru.vk.store | `rustore://`, `market://details?id={pkg}` | OPEN |
+| AppGallery | com.huawei.appmarket | `hiapplink://com.huawei.appmarket?appId=C{id}&detailType=0&callType=AGDLINK`, `store://appgallery.huawei.com/app/detail?id={pkg}` ([Huawei](https://developer.huawei.com/consumer/cn/doc/AppGallery-connect-Guides/agdlink-getlink-manual-0000001117762114)) | OPEN |
+| V-Appstore | com.vivo.appstore | `market://details?id={pkg}` | OPEN |
+| iQOO Store | com.iqoo.website | root (`website://`) | OPEN |
+
+### 5.4 Почта, сообщения, звонки
+
+| Приложение | Пакет | Глубокие действия | Риск |
+|---|---|---|---|
+| Gmail | com.google.android.gm | `mailto:{to}?subject={s}&body={b}` (отправка — SMTP) | CONFIRM |
+| Яндекс Почта | ru.yandex.mail | `mailto:` (отправка — SMTP) | CONFIRM |
+| Сообщения | com.android.mms | `smsto:{n}?body={t}` | CONFIRM |
+| Phone/Contacts | com.android.contacts | `tel:{n}` | CONFIRM |
+| Meet | com.google.android.apps.tachyon | `mailto:`, `tel:` | CONFIRM |
+| EasyShare | com.vivo.easyshare | `smsto:` | CONFIRM |
+
+### 5.5 Финансы (только чекпоинт, автономно нельзя)
+
+| Приложение | Пакет | Глубокие действия | Риск |
+|---|---|---|---|
+| СберБанк | ru.sberbankmobile | `sberbankonline://`, `perevod://` (экран); SberPay app2app — только от продавца | IRREVERSIBLE |
+| Т-Банк | com.idamob.tinkoff.android | `tbank://`, `tinkoffbank://` (root) | IRREVERSIBLE |
+| Альфа-Банк | ru.alfabank.mobile.android | root FAIL → главный экран | IRREVERSIBLE |
+| Ozon Банк | ru.ozon.fintech.finance | `ozonbank://`, `tel:` | IRREVERSIBLE |
+| РСХБ | ru.rshb.dbo | root (`rshbmbfl://`) | IRREVERSIBLE |
+| МТС Деньги | ru.lewis.dbo | root (`mtsmoney://`) | IRREVERSIBLE |
+| Цифра банк | com.bankffin.portfolio | root (`cifra://`) | IRREVERSIBLE |
+| Freedom Banker | kz.bankffin.app | root (`ffbankapp://`) | IRREVERSIBLE |
+| Altyn Wallet | com.altyn.wallet | root (`altynwallet://`) | IRREVERSIBLE |
+| INSNC | by.alfabank.insync3 | root (`insnc://`) | IRREVERSIBLE |
+| KWIKPAY | com.kwikpay.transfers | root (`kwikpay://`) | IRREVERSIBLE |
+| Mir Pay | ru.nspk.mirpay | root (`mirpay://`); оплата NFC — не агентом | IRREVERSIBLE |
+
+### 5.6 Умный дом и камеры (root; управление устройством — не публичный deep link)
+
+| Приложение | Пакет | Глубокие действия | Риск |
+|---|---|---|---|
+| Xiaomi Home | com.xiaomi.smarthome | root (`mihome://`); сцены — через облачный API с подписью, не deep link | CONFIRM |
+| Tapo | com.tplink.iot | root (`tapo://`); управление — облако/голос | CONFIRM |
+| KOJIMA HOME | com.kojima.home | root (`kojimahome://`) | CONFIRM |
+| Warmme | com.thermtouch.smart | root (`warmme://`) | CONFIRM |
+| Hommyn | com.hommyn.app | root (`climaton://`); recaptcha — callback | CONFIRM |
+| iFEEL Safe+Smart | com.ifeelsystems.safesmart | root (`ifeelsystemssafesmart://`) | CONFIRM |
+| CloudEdge | com.cloudedge.smarteye | root (`meari_cloudedge://`) | CONFIRM |
+| Hik-Connect | com.connect.enduser | root (`hikconnect://`); growing.* — callback | CONFIRM |
+| Smart Remote | com.vivo.vhome | root (`vhome://`) | CONFIRM |
+
+### 5.7 VPN и сеть
+
+| Приложение | Пакет | Глубокие действия | Риск |
+|---|---|---|---|
+| OpenVPN Connect | net.openvpn.openvpn | `openvpn://import-profile/{url}`, token-URL импорт профиля ([OpenVPN](https://openvpn.net/as-docs/v3/token-url/)) | CONFIRM |
+| AmneziaVPN | org.amnezia.vpn | root (`vpn://`); импорт конфига | CONFIRM |
+| AdGuard Mini | com.adguard.android.contentblocker | `sdns://{base64stamp}` (импорт DNS-сервера) | CONFIRM |
+| Zapret KVN | io.github.zapretkvn.android | root | OPEN |
+
+### 5.8 Инструменты, безопасность, документы
+
+| Приложение | Пакет | Глубокие действия | Риск |
+|---|---|---|---|
+| Authenticator | com.google.android.apps.authenticator2 | `otpauth://totp/{issuer}:{account}?secret={base32}&issuer={issuer}` (импорт ключа) | CONFIRM |
+| Яндекс ID (Ключ) | ru.yandex.key | `otpauth://` (импорт); root | CONFIRM |
+| Пароли (Kaspersky) | com.kaspersky.passwordmanager | root (`kpm://`); публичных глубоких нет | OPEN |
+| Документы/Таблицы/Презентации | com.google.android.apps.docs.editors.* | открытие файла через `content://`/SAF (не deep link) | OPEN |
+| Files | com.google.android.apps.nbu.files | root (`fbg-app://`); открытие файлов SAF | OPEN |
+| Фото | com.google.android.apps.photos | открытие изображения через SAF | OPEN |
+| Albums (vivo) | com.vivo.gallery | `vivogallery://`, `photoeditor://` (открыть/редактор) | OPEN |
+| Snapseed | com.niksoftware.snapseed | открытие изображения через SAF/share | OPEN |
+| Календарь Google | com.google.android.calendar | `content://com.android.calendar/events` (чтение/создание) | CONFIRM |
+| Я Календарь | com.yandex.calendar.app | root; CalDAV — через API | OPEN |
+| Яндекс Диск | ru.yandex.disk | root (`yandexdisk://`); файлы — WebDAV API | OPEN |
+| File Manager (vivo) | com.android.filemanager | root; SAF | OPEN |
+| vivo Cloud | com.bbk.cloud | root (`vivocloud://`) | OPEN |
+| Calculator/Clock/Compass/Notes/Weather/Recorder | com.vivo.* | root (`calculator://`, `bbkclock://`, `bbknotes://`, `weather://`…) | OPEN |
+| Camera | com.android.camera | `shortcut://` (запуск камеры); `MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA` | OPEN |
+| Themes/iManager/Feedback/Lock/Simple View | com.bbk.theme / com.vivo.* | root | OPEN |
+
+### 5.9 Сервисы и операторы (преимущественно root)
+
+| Приложение | Пакет | Глубокие действия | Риск |
+|---|---|---|---|
+| Госуслуги | ru.rostel | root (`gosuslugi://`); Биометрия — deeplink `InitiatorSystem/ResultUrl` (от банка) | CONFIRM |
+| Профи.ру | ru.profi.client | root (`profiapp://`) | OPEN |
+| Docmed / docmed online | ru.docmed.app / ru.docmedonline.app | root (`docmed-app://`, `telemeddocmed://`); sbp — callback | OPEN |
+| SmartMed Medsi | ru.mts.smartmed | root; spaysdk — callback | OPEN |
+| Здоровье | com.core.team.renins | root (`renhealth://`) | OPEN |
+| Россети МР | com.rosseti.rossetimr | root | OPEN |
+| МегаФон | ru.megafon.mlk | root (`megafonmlk://`) | OPEN |
+| Т-Мобайл | ru.tinkoff.mvno | root (`tinkoffmobile://`, `tmobile://`) | OPEN |
+| Настройки | com.android.settings | `settings://`, `package://{pkg}` (экран приложения) | OPEN |
+| Безопасность | com.google.android.apps.safetyhub | `tel:` | CONFIRM |
+
+### 5.10 AI-чаты и браузеры (root / открытие URL)
+
+| Приложение | Пакет | Глубокие действия | Риск |
+|---|---|---|---|
+| DeepSeek | com.deepseek.chat | root (`dpsk://`) | OPEN |
+| Kimi | com.moonshot.kimichat | root (`kimi://`) | OPEN |
+| Qwen | com.tongyi.intl | root (`qwen://`) | OPEN |
+| Алиса AI | com.yandex.aliceapp | root (`aliceapp://`) | OPEN |
+| Chrome | com.android.chrome | `googlechrome://{url}`, открытие URL | OPEN |
+| Яндекс Браузер | com.yandex.browser | `https://yandex.ru/search/?text={q}`, открытие URL | OPEN |
+| Google | com.google.android.googlequicksearchbox | `google://` поиск | OPEN |
+| Яндекс Клавиатура | ru.yandex.androidkeyboard | root | OPEN |
+| Walter | com.example.dispatcher | self | — |
+| com.netgt.magicfield | com.netgt.magicfield | root | OPEN |
+
+### 5.11 Вывод по покрытию
+
+- **Реальные параметризованные deep links** (открытая документация): Яндекс Карты/Музыка/Go, Telegram, OZON, Авито, YouTube, Google Play, AppGallery, RuStore, mailto/smsto/tel, Tumblr, VK Видео, Meshtastic, OpenVPN, AdGuard, otpauth, MAX, market.
+- **Только root / системные интенты**: банки (кроме экрана), операторы, умный дом (управление устройством — облачный API, не deep link), AI-чаты, большинство vivo-системных, сервисы.
+- **Callback-схемы** (не действия): `auth`, `recaptcha`, `spaysdk`, `bank100…`, `fbconnect`, `esia`, `growing.*`, `passport`, `login`, `okauth`, `genericidp`, `tagmanager.*`, `vk…`, `yx…`, `ut.…`, `micoSdk`, `rnsdkqqmusicauth`.
+- Управление умным домом и платежи **не делаются через deep link** автономно: либо облачный API с авторизацией (отдельный инструмент), либо человеческий чекпоинт.
