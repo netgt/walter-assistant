@@ -5086,14 +5086,11 @@ private fun AlertsHelpBlock(cardActions: CardActions) {
     }
 }
 
+/** Полная справка по инструментам в чате (helpKind == "tools"): все инструменты с описаниями. */
 @Composable
 private fun ToolsHelpBlock(cardActions: CardActions) {
     val cards = cardActions.toolsData()
     var expandedName by remember { mutableStateOf<String?>(null) }
-    var editKey by remember { mutableStateOf<String?>(null) }
-    var editValue by remember { mutableStateOf("") }
-    var formKey by remember { mutableStateOf<String?>(null) }
-    var formValues by remember { mutableStateOf(listOf<String>()) }
     Column(Modifier.fillMaxWidth().padding(top = 4.dp)) {
         cards.forEach { c ->
             val expanded = expandedName == c.name
@@ -5121,7 +5118,83 @@ private fun ToolsHelpBlock(cardActions: CardActions) {
                 if (expanded) {
                     c.settings.forEach { st ->
                         Spacer(Modifier.height(6.dp))
-                        if (st.editKey != null && editKey == st.editKey && expandedName == c.name) {
+                        Text(
+                            "${st.label}: ${st.value}",
+                            fontSize = 11.sp,
+                            color = DsText,
+                            fontFamily = Mono,
+                            lineHeight = 16.sp,
+                            modifier = Modifier.fillMaxWidth().padding(2.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Настройки инструментов на экране настроек: только параметры, с пояснениями. */
+@Composable
+private fun ToolSettingsBlock(cardActions: CardActions) {
+    val byName = cardActions.toolsData().associateBy { it.name }
+    // Только инструменты с реальными параметрами; у каждой группы — пояснение, какие данные нужны.
+    data class Group(val title: String, val tools: String, val hint: String, val representative: String)
+    val groups = listOf(
+        Group("Веб-поиск", "web_search · route_info",
+            "Ключ и URL Яндекс Поиска. Без ключа работает только DuckDuckGo. Маршруты (route_info) — платный сервис Яндекса.", "web_search"),
+        Group("Геокодер и расстояние", "geocode · reverse_geocode · distance",
+            "Ключ и URL Яндекс Геокодера: адрес → координаты и обратно, расстояние по прямой.", "geocode"),
+        Group("Почта (IMAP)", "read_mail · mail_download · mail_send",
+            "Сервер, порт, логин и пароль приложения. Можно несколько ящиков (Яндекс, Gmail).", "read_mail"),
+        Group("Календари (CalDAV)", "read_calendar",
+            "CalDAV-ссылка, логин и пароль приложения. Системный календарь подключается через право ниже.", "read_calendar"),
+        Group("Яндекс Диск", "disk_list · disk_files · disk_read · disk_download · disk_write · disk_upload · disk_delete · disk_move",
+            "WebDAV: логин и пароль приложения. Можно несколько аккаунтов.", "disk_list"),
+        Group("Публичные ссылки Диска", "disk_publish",
+            "OAuth-токен Яндекс Диска для публикации файлов по ссылке.", "disk_publish"),
+        Group("Веб-ленты", "fetch_url",
+            "Полные URL лент для фоновых оповещений, по одному на строку.", "fetch_url")
+    )
+    var expandedName by remember { mutableStateOf<String?>(null) }
+    var editKey by remember { mutableStateOf<String?>(null) }
+    var editValue by remember { mutableStateOf("") }
+    var formKey by remember { mutableStateOf<String?>(null) }
+    var formValues by remember { mutableStateOf(listOf<String>()) }
+    Column(Modifier.fillMaxWidth().padding(top = 4.dp)) {
+        groups.forEach { g ->
+            val c = byName[g.representative] ?: return@forEach
+            val editable = c.settings.filter { it.editKey != null }
+            val expanded = expandedName == g.title
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 6.dp)
+                    .clip(RoundedCornerShape(13.dp))
+                    .background(Color.White)
+                    .border(1.dp, if (expanded) DsBlue else DsBorder, RoundedCornerShape(13.dp))
+                    .clickable { expandedName = if (expanded) null else g.title }
+                    .padding(10.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        g.title,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = DsText,
+                        fontFamily = Mono,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(if (expanded) "▾" else "▸", fontSize = 12.sp, color = DsHint, fontFamily = Mono)
+                }
+                Spacer(Modifier.height(3.dp))
+                Text(g.tools, fontSize = 10.sp, color = DsHint, fontFamily = Mono, lineHeight = 14.sp)
+                Spacer(Modifier.height(3.dp))
+                Text(g.hint, fontSize = 11.sp, color = DsHint, fontFamily = Mono, lineHeight = 15.sp)
+                if (expanded) {
+                    editable.forEach { st ->
+                        val ek = st.editKey ?: return@forEach
+                        Spacer(Modifier.height(6.dp))
+                        if (editKey == ek && expandedName == g.title) {
                             Column {
                                 OutlinedTextField(
                                     value = editValue,
@@ -5132,7 +5205,7 @@ private fun ToolsHelpBlock(cardActions: CardActions) {
                                 )
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 6.dp)) {
                                     RoundIconButton(R.drawable.ic_check, "Сохранить") {
-                                        cardActions.saveToolSetting(st.editKey, editValue)
+                                        cardActions.saveToolSetting(ek, editValue)
                                         editKey = null
                                     }
                                     RoundIconButton(R.drawable.ic_close, "Отмена") { editKey = null }
@@ -5148,24 +5221,19 @@ private fun ToolsHelpBlock(cardActions: CardActions) {
                                     lineHeight = 16.sp,
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .then(
-                                            if (st.editKey != null) Modifier
-                                                .clip(RoundedCornerShape(6.dp))
-                                                .clickable {
-                                                    editKey = st.editKey
-                                                    editValue = st.value
-                                                }
-                                                .padding(2.dp)
-                                            else Modifier.padding(2.dp)
-                                        )
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .clickable {
+                                            editKey = ek
+                                            editValue = st.value
+                                        }
+                                        .padding(2.dp)
                                 )
                             }
                         }
                     }
-                    // форма добавления аккаунта
                     if (c.addForm.isNotEmpty()) {
                         Spacer(Modifier.height(8.dp))
-                        if (formKey == c.name) {
+                        if (formKey == g.title) {
                             Column {
                                 c.addForm.forEachIndexed { i, f ->
                                     OutlinedTextField(
@@ -5192,7 +5260,7 @@ private fun ToolsHelpBlock(cardActions: CardActions) {
                             }
                         } else {
                             RoundIconButton(R.drawable.ic_add, "Добавить аккаунт") {
-                                formKey = c.name
+                                formKey = g.title
                                 formValues = c.addForm.map { "" }
                             }
                         }
@@ -5978,8 +6046,8 @@ private fun SettingsScreen(
             RoundIconButton(R.drawable.ic_check, "Сохранить") { onModelSave(urlInput.trim(), keyInput.trim()) }
 
             // Оповещения настраиваются только в чате через alert_*; отдельной секции в настройках нет.
-            SectionHeader("Инструменты")
-            ToolsHelpBlock(cardActions)
+            SectionHeader("Настройки инструментов")
+            ToolSettingsBlock(cardActions)
             SectionHeader("Права")
             PermissionRow(
                 "Уведомления Walter (оповещения)",

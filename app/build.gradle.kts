@@ -37,8 +37,8 @@ android {
         applicationId = "com.example.dispatcher"
         minSdk = 26
         targetSdk = 35
-        versionCode = 274
-        versionName = "1.52.0"
+        versionCode = 275
+        versionName = "1.52.1"
         multiDexEnabled = true
         buildConfigField("int", "TG_API_ID", telegramProps.getProperty("apiId", "0"))
         buildConfigField("String", "TG_API_HASH", "\"" + telegramProps.getProperty("apiHash", "").replace("\\", "\\\\").replace("\"", "\\\"") + "\"")
