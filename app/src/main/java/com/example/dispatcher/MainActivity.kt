@@ -931,6 +931,12 @@ class MainActivity : ComponentActivity() {
                                     val port = hp.getOrNull(1)?.trim()?.toIntOrNull() ?: a.port
                                     a.copy(host = host, port = port)
                                 }
+                                "smtp" -> {
+                                    val hp = v.split(':')
+                                    val host = hp.getOrNull(0)?.trim().orEmpty()
+                                    val port = hp.getOrNull(1)?.trim()?.toIntOrNull() ?: a.smtpPort
+                                    a.copy(smtpHost = host, smtpPort = port)
+                                }
                                 "user" -> a.copy(user = v)
                                 "pass" -> a.copy(pass = v)
                                 else -> a
@@ -981,7 +987,9 @@ class MainActivity : ComponentActivity() {
                             val pass = values.getOrElse(3) { "" }.trim()
                             if (host.isNotBlank() && user.isNotBlank() && pass.isNotBlank()) {
                                 val port = values.getOrElse(1) { "993" }.trim().toIntOrNull() ?: 993
-                                val next = MailAccounts.add(mailAccounts, host, port, user, pass)
+                                val smtpHost = values.getOrElse(4) { "" }.trim()
+                                val smtpPort = values.getOrElse(5) { "465" }.trim().toIntOrNull() ?: 465
+                                val next = MailAccounts.add(mailAccounts, host, port, user, pass, true, smtpHost, smtpPort)
                                 mailAccounts = next
                                 prefs.edit().putString(Prefs.KEY_MAIL_ACCOUNTS, MailAccounts.toJson(next)).apply()
                             }
@@ -3759,8 +3767,10 @@ $mem
         val attachments = o.optJSONArray("attachments")?.let { arr ->
             (0 until arr.length()).map { arr.optString(it) }.filter { it.isNotBlank() }
         } ?: emptyList()
-        val smtpHost = o.optString("smtpHost").ifBlank { acc.host.replace("imap.", "smtp.") }
-        val smtpPort = o.optInt("smtpPort", 465)
+        val smtpHost = o.optString("smtpHost").ifBlank {
+            acc.smtpHost.ifBlank { acc.host.replace("imap.", "smtp.") }
+        }
+        val smtpPort = o.optInt("smtpPort", 0).takeIf { it > 0 } ?: acc.smtpPort
         return withContext(Dispatchers.IO) {
             runCatching {
                 MailStore.send(
@@ -5144,16 +5154,14 @@ private fun ToolSettingsBlock(cardActions: CardActions) {
             "Ключ и URL Яндекс Поиска. Без ключа работает только DuckDuckGo. Маршруты (route_info) — платный сервис Яндекса.", "web_search"),
         Group("Геокодер и расстояние", "geocode · reverse_geocode · distance",
             "Ключ и URL Яндекс Геокодера: адрес → координаты и обратно, расстояние по прямой.", "geocode"),
-        Group("Почта (IMAP)", "read_mail · mail_download · mail_send",
-            "Сервер, порт, логин и пароль приложения. Можно несколько ящиков (Яндекс, Gmail).", "read_mail"),
+        Group("Почта (IMAP + SMTP)", "read_mail · mail_download · mail_send",
+            "IMAP — чтение, SMTP — отправка: серверы, порты, логин и пароль приложения. Можно несколько ящиков (Яндекс, Gmail).", "read_mail"),
         Group("Календари (CalDAV)", "read_calendar",
             "CalDAV-ссылка, логин и пароль приложения. Системный календарь подключается через право ниже.", "read_calendar"),
         Group("Яндекс Диск", "disk_list · disk_files · disk_read · disk_download · disk_write · disk_upload · disk_delete · disk_move",
             "WebDAV: логин и пароль приложения. Можно несколько аккаунтов.", "disk_list"),
         Group("Публичные ссылки Диска", "disk_publish",
-            "OAuth-токен Яндекс Диска для публикации файлов по ссылке.", "disk_publish"),
-        Group("Веб-ленты", "fetch_url",
-            "Полные URL лент для фоновых оповещений, по одному на строку.", "fetch_url")
+            "OAuth-токен Яндекс Диска для публикации файлов по ссылке.", "disk_publish")
     )
     var expandedName by remember { mutableStateOf<String?>(null) }
     var editKey by remember { mutableStateOf<String?>(null) }

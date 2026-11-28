@@ -111,6 +111,7 @@ class ToolSettingsTest {
         assertEquals("oauth", byId["disk_publish"]!!.settings.first { it.label == "OAuth-токен" }.editKey)
         // аккаунты редактируются по ключам mail.N.* / caldav.N.* / disk.N.*
         assertTrue(byId["read_mail"]!!.settings.any { it.editKey == "mail.0.host" })
+        assertTrue(byId["read_mail"]!!.settings.any { it.editKey == "mail.0.smtp" })
         assertTrue(byId["read_mail"]!!.settings.any { it.editKey == "mail.0.user" })
         assertTrue(byId["read_mail"]!!.settings.any { it.editKey == "mail.0.pass" })
         assertTrue(byId["read_calendar"]!!.settings.any { it.editKey == "caldav.0.url" })
@@ -122,7 +123,7 @@ class ToolSettingsTest {
     @Test
     fun accountAddFormsPresent() {
         val byId = build().associateBy { it.name }
-        assertEquals(4, byId["read_mail"]!!.addForm.size)
+        assertEquals(6, byId["read_mail"]!!.addForm.size)
         assertEquals(4, byId["read_calendar"]!!.addForm.size)
         assertEquals(3, byId["disk_list"]!!.addForm.size)
         assertTrue(byId["read_sms"]!!.addForm.isEmpty())

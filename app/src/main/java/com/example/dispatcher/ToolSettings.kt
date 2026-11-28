@@ -74,10 +74,12 @@ object ToolSettings {
             else -> emptyList()
         }
         val mailForm = listOf(
-            ToolSetting("Сервер", "imap.yandex.ru"),
-            ToolSetting("Порт", "993"),
+            ToolSetting("IMAP сервер", "imap.yandex.ru"),
+            ToolSetting("IMAP порт", "993"),
             ToolSetting("Логин", "email"),
-            ToolSetting("Пароль приложения", "")
+            ToolSetting("Пароль приложения", ""),
+            ToolSetting("SMTP сервер", "smtp.yandex.ru"),
+            ToolSetting("SMTP порт", "465")
         )
         val calForm = listOf(
             ToolSetting("Метка", "например, имя"),
@@ -107,7 +109,8 @@ object ToolSettings {
         if (accounts.isEmpty()) return listOf(ToolSetting("Аккаунты", "(нет)"))
         val out = mutableListOf<ToolSetting>()
         accounts.forEachIndexed { i, a ->
-            out += ToolSetting("Аккаунт ${i + 1}", "${a.host}:${a.port}", "mail.$i.host")
+            out += ToolSetting("IMAP ${i + 1}", "${a.host}:${a.port}", "mail.$i.host")
+            out += ToolSetting("SMTP ${i + 1}", "${a.smtpHost.ifBlank { "(авто из IMAP)" }}:${a.smtpPort}", "mail.$i.smtp")
             out += ToolSetting("Логин", a.user, "mail.$i.user")
             out += ToolSetting("Пароль приложения", a.pass, "mail.$i.pass")
         }

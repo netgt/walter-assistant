@@ -306,14 +306,16 @@ object MailStore {
     }
 }
 
-/** Почтовый аккаунт по IMAP (Яндекс/Gmail; пароль — пароль приложения). */
+/** Почтовый аккаунт: IMAP для чтения и SMTP для отправки (пароль — пароль приложения). */
 data class MailAccount(
     val id: Long,
     val host: String,
     val port: Int,
     val user: String,
     val pass: String,
-    val ssl: Boolean = true
+    val ssl: Boolean = true,
+    val smtpHost: String = "",
+    val smtpPort: Int = 465
 )
 
 /** Хранилище списка почтовых аккаунтов: JSON в настройках, чистые функции. */
@@ -330,6 +332,8 @@ object MailAccounts {
                     .put("user", a.user)
                     .put("pass", a.pass)
                     .put("ssl", a.ssl)
+                    .put("smtpHost", a.smtpHost)
+                    .put("smtpPort", a.smtpPort)
             )
         }
         return arr.toString()
@@ -347,7 +351,9 @@ object MailAccounts {
                     o.optInt("port", 993),
                     o.optString("user"),
                     o.optString("pass"),
-                    o.optBoolean("ssl", true)
+                    o.optBoolean("ssl", true),
+                    o.optString("smtpHost"),
+                    o.optInt("smtpPort", 465)
                 )
             }
         } catch (e: Exception) {
@@ -355,9 +361,12 @@ object MailAccounts {
         }
     }
 
-    fun add(list: List<MailAccount>, host: String, port: Int, user: String, pass: String, ssl: Boolean = true): List<MailAccount> {
+    fun add(
+        list: List<MailAccount>, host: String, port: Int, user: String, pass: String,
+        ssl: Boolean = true, smtpHost: String = "", smtpPort: Int = 465
+    ): List<MailAccount> {
         val id = (list.maxOfOrNull { it.id } ?: 0L) + 1
-        return list + MailAccount(id, host.trim(), port, user.trim(), pass, ssl)
+        return list + MailAccount(id, host.trim(), port, user.trim(), pass, ssl, smtpHost.trim(), smtpPort)
     }
 
     fun remove(list: List<MailAccount>, id: Long): List<MailAccount> = list.filter { it.id != id }
