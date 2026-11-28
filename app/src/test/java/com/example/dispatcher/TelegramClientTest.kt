@@ -63,6 +63,34 @@ class TelegramClientTest {
     }
 
     @Test
+    fun cardTextHidesTechnicalAttachmentDetails() {
+        val m = TelegramClient.MessageSummary(
+            id = 1, chatId = 2, sender = "Автор", at = 0,
+            text = "Текст\n[Вложение: report.pdf (fileId=42, 128 B)]",
+            attachments = listOf(TelegramClient.Attachment(42, "report.pdf", "application/pdf", 128)),
+            body = "Текст"
+        )
+        val card = TelegramClient.cardText(m)
+        assertEquals("Текст\nВложение: report.pdf", card)
+        assertTrue(!card.contains("fileId"))
+        assertTrue(!card.contains("128"))
+        assertTrue(!card.contains("["))
+    }
+
+    @Test
+    fun cardTextMultipleAttachmentsUseNamesOnly() {
+        val m = TelegramClient.MessageSummary(
+            id = 1, chatId = 2, sender = "Автор", at = 0, text = "",
+            attachments = listOf(
+                TelegramClient.Attachment(1, "a.pdf", "application/pdf", 10),
+                TelegramClient.Attachment(2, "b.jpg", "image/jpeg", 20)
+            ),
+            body = ""
+        )
+        assertEquals("Вложения: a.pdf, b.jpg", TelegramClient.cardText(m))
+    }
+
+    @Test
     fun historyContainsRawMessageIds() {
         val chat = TdApi.Chat().apply {
             id = -1001

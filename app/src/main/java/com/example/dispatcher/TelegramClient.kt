@@ -48,8 +48,17 @@ object TelegramClient {
         val at: Long,
         val text: String,
         val attachments: List<Attachment>,
-        val pending: Boolean = false
+        val pending: Boolean = false,
+        val body: String = ""
     )
+
+    /** Текст карточки в чате: только тело и «Вложение: имена», без fileId/размеров/скобок. */
+    fun cardText(m: MessageSummary): String {
+        if (m.attachments.isEmpty()) return m.body
+        val names = m.attachments.joinToString(", ") { it.name }
+        val label = if (m.attachments.size > 1) "Вложения" else "Вложение"
+        return (if (m.body.isBlank()) "" else m.body + "\n") + "$label: $names"
+    }
 
     data class History(val chat: TdApi.Chat, val messages: List<MessageSummary>)
 
@@ -207,7 +216,8 @@ object TelegramClient {
             at = message.date.toLong() * 1000,
             text = contentText(message.content),
             attachments = attachments,
-            pending = message.sendingState is TdApi.MessageSendingStatePending
+            pending = message.sendingState is TdApi.MessageSendingStatePending,
+            body = bodyText(message.content)
         )
     }
 
@@ -227,9 +237,9 @@ object TelegramClient {
         }
     }
 
-    internal fun contentText(content: TdApi.MessageContent?): String {
+    internal fun bodyText(content: TdApi.MessageContent?): String {
         if (content == null) return ""
-        val body = when (content) {
+        return when (content) {
             is TdApi.MessageText -> content.text?.text.orEmpty()
             is TdApi.MessageDocument -> content.caption?.text.orEmpty()
             is TdApi.MessagePhoto -> content.caption?.text.orEmpty()
@@ -237,8 +247,14 @@ object TelegramClient {
             is TdApi.MessageAudio -> content.caption?.text.orEmpty()
             is TdApi.MessageVoiceNote -> content.caption?.text.orEmpty()
             is TdApi.MessageAnimation -> content.caption?.text.orEmpty()
-            else -> "[${content.javaClass.simpleName.removePrefix("Message")}]"
+            else -> ""
         }
+    }
+
+    /** Сырой текст для модели: тело + вложения с fileId/размером (нужны для tg_download). */
+    internal fun contentText(content: TdApi.MessageContent?): String {
+        if (content == null) return ""
+        val body = bodyText(content)
         val files = attachments(content)
         if (files.isEmpty()) return body
         val filesText = files.joinToString("; ") {

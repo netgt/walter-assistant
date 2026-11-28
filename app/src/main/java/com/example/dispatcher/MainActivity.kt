@@ -3831,7 +3831,7 @@ $mem
                 val count = o?.optInt("count", 20) ?: 20
                 val history = TelegramClient.history(this@MainActivity, chat, count)
                 onEvents(history.messages.map { m ->
-                    EventInfo("telegram", history.chat.title, m.sender, m.text.take(400), m.at)
+                    EventInfo("telegram", history.chat.title, m.sender, TelegramClient.cardText(m).take(400), m.at)
                 })
                 TelegramClient.formatHistory(history)
             }.getOrElse { "Telegram: ${it.message ?: it.javaClass.simpleName}" }
@@ -5161,7 +5161,9 @@ private fun ToolSettingsBlock(cardActions: CardActions) {
         Group("Яндекс Диск", "disk_list · disk_files · disk_read · disk_download · disk_write · disk_upload · disk_delete · disk_move",
             "WebDAV: логин и пароль приложения. Можно несколько аккаунтов.", "disk_list"),
         Group("Публичные ссылки Диска", "disk_publish",
-            "OAuth-токен Яндекс Диска для публикации файлов по ссылке.", "disk_publish")
+            "OAuth-токен Яндекс Диска для публикации файлов по ссылке.", "disk_publish"),
+        Group("Telegram (TDLib)", "tg_chats · tg_history · tg_send · tg_send_file · tg_download",
+            "Вход по номеру телефона, коду и паролю 2FA. Сессия сохраняется на устройстве.", "telegram")
     )
     var expandedName by remember { mutableStateOf<String?>(null) }
     var editKey by remember { mutableStateOf<String?>(null) }
@@ -5170,8 +5172,10 @@ private fun ToolSettingsBlock(cardActions: CardActions) {
     var formValues by remember { mutableStateOf(listOf<String>()) }
     Column(Modifier.fillMaxWidth().padding(top = 4.dp)) {
         groups.forEach { g ->
-            val c = byName[g.representative] ?: return@forEach
-            val editable = c.settings.filter { it.editKey != null }
+            val isTelegram = g.representative == "telegram"
+            val c = byName[g.representative]
+            if (!isTelegram && c == null) return@forEach
+            val editable = c?.settings?.filter { it.editKey != null } ?: emptyList()
             val expanded = expandedName == g.title
             Column(
                 Modifier
@@ -5199,6 +5203,10 @@ private fun ToolSettingsBlock(cardActions: CardActions) {
                 Spacer(Modifier.height(3.dp))
                 Text(g.hint, fontSize = 11.sp, color = DsHint, fontFamily = Mono, lineHeight = 15.sp)
                 if (expanded) {
+                    if (isTelegram) {
+                        Spacer(Modifier.height(8.dp))
+                        TelegramAuthBlock()
+                    } else {
                     editable.forEach { st ->
                         val ek = st.editKey ?: return@forEach
                         Spacer(Modifier.height(6.dp))
@@ -5239,7 +5247,7 @@ private fun ToolSettingsBlock(cardActions: CardActions) {
                             }
                         }
                     }
-                    if (c.addForm.isNotEmpty()) {
+                    if (c!!.addForm.isNotEmpty()) {
                         Spacer(Modifier.height(8.dp))
                         if (formKey == g.title) {
                             Column {
@@ -5272,6 +5280,7 @@ private fun ToolSettingsBlock(cardActions: CardActions) {
                                 formValues = c.addForm.map { "" }
                             }
                         }
+                    }
                     }
                 }
             }
