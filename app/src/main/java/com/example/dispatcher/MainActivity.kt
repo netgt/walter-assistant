@@ -1982,7 +1982,12 @@ class MainActivity : ComponentActivity() {
 
                 val cardActions = CardActions(
                     onReply = { e ->
-                        if (e.kind == "sms") openApp("Сообщения") else PushReply.open(e, ctx)
+                        when (e.kind) {
+                            "sms" -> openApp("Сообщения")
+                            "mail" -> openApp(if (e.source.contains("gmail", true)) "Gmail" else "Почта")
+                            "telegram" -> openApp("Telegram")
+                            else -> PushReply.open(e, ctx)
+                        }
                     },
                     openDiskDir = { ref -> openDiskDirCard(ref) },
                     diskListDir = { ref ->
@@ -5352,7 +5357,7 @@ private fun EventBlock(
                 "sms" -> Color(0xFFE3F2E5) to Color(0xFF2F7A4D)
                 "push" -> Color(0xFFFCE9DE) to Color(0xFF8C4E2D)
                 "mail" -> Color(0xFFF1E9FB) to Color(0xFF6B4FA3)
-                "telegram" -> Color(0xFFE8F0FA) to Color(0xFF3B638C)
+                "telegram" -> Color(0xFFE0F2F1) to Color(0xFF00695C)
                 "calendar" -> Color(0xFFFBF0DC) to Color(0xFF8A6A1F)
                 "watch" -> Color(0xFFF1F3F5) to Color(0xFF4B5159)
                 else -> DsAccent to DsBlue
@@ -5425,7 +5430,7 @@ private fun EventBlock(
             }
         }
         // Единые иконочные действия для пушей, SMS и алертов.
-        if (event.kind in setOf("push", "sms", "watch")) {
+        if (event.kind in setOf("push", "sms", "watch", "mail", "telegram")) {
             Spacer(Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (event.kind == "push" && canReply) {
@@ -5433,6 +5438,12 @@ private fun EventBlock(
                 }
                 if (event.kind == "sms") {
                     RoundIconButton(R.drawable.ic_message, "Открыть сообщения", onClick = { cardActions.onReply(event) })
+                }
+                if (event.kind == "mail") {
+                    RoundIconButton(R.drawable.ic_open_external, "Открыть почту", onClick = { cardActions.onReply(event) })
+                }
+                if (event.kind == "telegram") {
+                    RoundIconButton(R.drawable.ic_open_external, "Открыть Telegram", onClick = { cardActions.onReply(event) })
                 }
                 RoundIconButton(R.drawable.ic_actions, "Действия", onClick = onProcess)
             }
@@ -6037,8 +6048,6 @@ private fun SettingsScreen(
             LauncherSettingsBlock()
             SectionHeader("Пуши в обычном режиме")
             PushVisibilityBlock()
-            SectionHeader("Telegram")
-            TelegramAuthBlock()
             SectionHeader("Модель")
             Text("API URL", fontSize = 13.sp, color = DsHint)
             Spacer(Modifier.height(4.dp))
