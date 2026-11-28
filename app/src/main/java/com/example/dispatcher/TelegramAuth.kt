@@ -65,7 +65,11 @@ object TelegramAuth {
             is TdApi.AuthorizationStateReady -> UiState("READY", "Telegram подключён")
             is TdApi.AuthorizationStateLoggingOut,
             is TdApi.AuthorizationStateClosing,
-            is TdApi.AuthorizationStateClosed -> UiState("LOGGED_OUT", "Сессия Telegram закрыта")
+            is TdApi.AuthorizationStateClosed -> {
+                client = null
+                TelegramClient.reset()
+                UiState("LOGGED_OUT", "Сессия Telegram закрыта")
+            }
             is TdApi.AuthorizationStateWaitEmailAddress,
             is TdApi.AuthorizationStateWaitEmailCode -> UiState("ERROR", "Telegram просит email — пока поддержан только вход по телефону")
             is TdApi.AuthorizationStateWaitOtherDeviceConfirmation -> UiState("ERROR", "QR-вход пока не включён; используй телефон")
@@ -76,6 +80,9 @@ object TelegramAuth {
     fun refresh(ctx: Context) {
         ensureClient(ctx)
     }
+
+    /** Общий TDLib-клиент для чатов/файлов; инициализация и авторизация остаются здесь. */
+    internal fun client(ctx: Context): TdClient? = ensureClient(ctx)
 
     fun startPhone(ctx: Context, phone: String) {
         val td = ensureClient(ctx) ?: return

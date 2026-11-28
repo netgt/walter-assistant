@@ -108,6 +108,7 @@ fun eventToText(e: EventInfo): String {
     val head = when (e.kind) {
         "sms" -> "SMS от «${e.source}»"
         "watch" -> "Следилка «${e.source}»"
+        "telegram" -> "Telegram «${e.source}»"
         else -> "Пуш из «${e.source}»"
     }
     val parts = listOf(e.title, e.text).map { it.trim() }.filter { it.isNotBlank() }.distinct().take(2)
@@ -118,7 +119,9 @@ fun eventToText(e: EventInfo): String {
 }
 
 /** Ключ потока обсуждения для события. */
-fun eventKey(e: EventInfo): String = "${e.kind}|${e.source}|${e.at}"
+fun eventKey(e: EventInfo): String =
+    if (e.kind == "telegram") "${e.kind}|${e.source}|${e.title}|${e.at}|${e.text.hashCode()}"
+    else "${e.kind}|${e.source}|${e.at}"
 
 /** Ключ карточки события из списка тула: уникален по позиции, треды живут под ним. */
 fun eventListKey(e: EventInfo, idx: Int): String = eventKey(e) + "|lst$idx"
@@ -126,7 +129,7 @@ fun eventListKey(e: EventInfo, idx: Int): String = eventKey(e) + "|lst$idx"
 /** Дата и время события для карточки: пуши/SMS — с секундами, остальные — как раньше. */
 fun eventTime(e: EventInfo): String =
     SimpleDateFormat(
-        if (e.kind == "push" || e.kind == "sms") "dd.MM.yyyy HH:mm:ss" else "HH:mm",
+        if (e.kind == "push" || e.kind == "sms" || e.kind == "telegram") "dd.MM.yyyy HH:mm:ss" else "HH:mm",
         Locale.getDefault()
     ).format(Date(e.at))
 
